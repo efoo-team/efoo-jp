@@ -44,6 +44,13 @@
 			if (!siteHeader.classList.contains('is-open')) { return; }
 			if (!siteHeader.contains(e.target) || e.target.closest('.site-nav a')) { setNavOpen(false); }
 		});
+		// ナビを畳む幅（main.css の max-width: 860px と同じ値）を出たら、閉じた状態に戻す
+		var navCollapsed = window.matchMedia && window.matchMedia('(max-width: 860px)');
+		if (navCollapsed) {
+			var onNavMedia = function (e) { if (!e.matches) { setNavOpen(false); } };
+			if (navCollapsed.addEventListener) { navCollapsed.addEventListener('change', onNavMedia); }
+			else if (navCollapsed.addListener) { navCollapsed.addListener(onNavMedia); }
+		}
 	}
 
 	// スクロール連動出現のフォールバック（animation-timeline 未対応ブラウザ）。
