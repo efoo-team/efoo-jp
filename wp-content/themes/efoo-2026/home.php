@@ -9,7 +9,7 @@ get_header();
 		<p class="en page-band-label">CONTENTS</p>
 		<h1 class="page-band-title">お知らせ・掲載実績</h1>
 	</section>
-	<div style="max-width: 1240px; margin: 0 auto; padding: 48px 32px 110px; box-sizing: border-box; display: flex; flex-direction: column; gap: 36px">
+	<div class="list-wrap" style="display: flex; flex-direction: column; gap: 36px">
 		<?php get_template_part( 'template-parts/category-chips' ); ?>
 		<?php get_template_part( 'template-parts/news-list' ); ?>
 	</div>

@@ -4,7 +4,7 @@
  */
 ?>
 <footer style="border-top: 1px solid #E2E7E3; background: #FAFAF7">
-	<div style="max-width: 1240px; margin: 0 auto; padding: 64px 32px 48px; box-sizing: border-box; display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
+	<div class="footer-inner">
 		<div style="display: flex; flex-direction: column; gap: 16px; flex: 1 1 280px; min-width: 0">
 			<span class="en" style="font-size: 24px; font-weight: 700; color: #14201A">efoo<span class="logo-dot" style="color: var(--accent)">.</span></span>
 			<p style="margin: 0; font-size: 13px; line-height: 1.9; color: #6B776F">efoo株式会社<br>Food × Technology</p>
@@ -33,7 +33,7 @@
 		</div>
 	</div>
 	<p class="en footer-logo" aria-hidden="true">efoo<span style="color: #DCEFE2">.</span></p>
-	<p class="en" style="max-width: 1240px; margin: 0 auto; padding: 0 32px 40px; box-sizing: border-box; font-size: 12px; color: #6B776F; letter-spacing: 0.06em">© efoo Inc. All rights reserved.</p>
+	<p class="en footer-copy">© efoo Inc. All rights reserved.</p>
 </footer>
 
 <?php wp_footer(); ?>
