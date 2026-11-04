@@ -8,6 +8,20 @@
 		return new Promise(function (res) { setTimeout(res, ms); });
 	}
 
+	// ページ内アンカーだけを滑らかにスクロールする。CSS の scroll-behavior を全体に
+	// 掛けるとページ遷移時のスクロール復元までアニメーションしてしまうため、クリック時に限る
+	document.addEventListener('click', function (e) {
+		var a = e.target.closest ? e.target.closest('a[href*="#"]') : null;
+		if (!a) { return; }
+		var url = new URL(a.href, location.href);
+		if (url.pathname !== location.pathname || url.origin !== location.origin || !url.hash) { return; }
+		var target = document.querySelector(url.hash);
+		if (!target) { return; }
+		e.preventDefault();
+		target.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+		history.pushState(null, '', url.hash);
+	});
+
 	// スクロール連動出現のフォールバック（animation-timeline 未対応ブラウザ）
 	if (!(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'))) {
 		document.documentElement.classList.add('no-sdt');

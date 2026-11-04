@@ -12,21 +12,59 @@ add_action( 'after_setup_theme', function () {
 } );
 
 /**
- * お知らせ一覧のURL。投稿ページが設定されていればそれを、無ければ投稿数の多いカテゴリのアーカイブを使う。
+ * お知らせで扱う投稿タイプ。通常の投稿に加え、現サイトがお知らせ・掲載実績を
+ * 保存している wpzoom-portfolio の portfolio_item を含める。
+ */
+function efoo_news_post_types(): array {
+	$types = array( 'post' );
+	if ( post_type_exists( 'portfolio_item' ) ) {
+		$types[] = 'portfolio_item';
+	}
+	return $types;
+}
+
+/**
+ * お知らせの記事が属する分類の名称。portfolio タクソノミー → カテゴリの順に見る。
+ */
+function efoo_entry_term_label( ?WP_Post $post = null ): string {
+	$post = get_post( $post );
+	foreach ( array( 'portfolio', 'category' ) as $tax ) {
+		if ( ! taxonomy_exists( $tax ) ) {
+			continue;
+		}
+		$terms = get_the_terms( $post, $tax );
+		if ( $terms && ! is_wp_error( $terms ) ) {
+			return $terms[0]->name;
+		}
+	}
+	return 'お知らせ';
+}
+
+/**
+ * お知らせ一覧のURL。投稿ページが設定されていればそれを、無ければ
+ * portfolio／カテゴリのうち記事数の多い分類のアーカイブを使う。
  */
 function efoo_news_index_url(): string {
 	$posts_page = (int) get_option( 'page_for_posts' );
 	if ( $posts_page ) {
 		return (string) get_permalink( $posts_page );
 	}
-	$cats = get_categories(
+	$terms = get_terms(
 		array(
-			'number'  => 1,
-			'orderby' => 'count',
-			'order'   => 'DESC',
+			'taxonomy'   => array_filter( array( 'portfolio', 'category' ), 'taxonomy_exists' ),
+			'hide_empty' => true,
+			'number'     => 1,
+			'orderby'    => 'count',
+			'order'      => 'DESC',
 		)
 	);
-	return $cats ? (string) get_category_link( $cats[0] ) : home_url( '/' );
+	if ( $terms && ! is_wp_error( $terms ) ) {
+		$link = get_term_link( $terms[0] );
+		if ( ! is_wp_error( $link ) ) {
+			return (string) $link;
+		}
+	}
+	return home_url( '/' );
 }
 
 /**

@@ -5,8 +5,7 @@
 get_header();
 while ( have_posts() ) {
 	the_post();
-	$cat   = get_the_category();
-	$label = $cat ? $cat[0]->name : 'お知らせ';
+	$label = efoo_entry_term_label();
 	?>
 <main>
 	<article>

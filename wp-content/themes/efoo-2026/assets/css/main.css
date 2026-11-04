@@ -11,7 +11,6 @@
 	--band: #F1F4F0;
 }
 
-html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--ground); color: var(--ink); font-family: 'Noto Sans JP', sans-serif; }
 a { color: var(--muted); text-decoration: none; }
 a:hover { color: var(--ink); }
@@ -112,7 +111,6 @@ a:hover { color: var(--ink); }
 @keyframes scrollHint { 0% { top: -100%; } 60%, 100% { top: 100%; } }
 
 @media (prefers-reduced-motion: reduce) {
-	html { scroll-behavior: auto; }
 	* { animation: none !important; transition: none !important; }
 	.reveal, .char, .sr, .word-assemble { opacity: 1; transform: none; filter: none; }
 	.word-assemble { color: var(--accent); }
@@ -171,3 +169,24 @@ footer nav a:hover { color: var(--accent); transform: translateX(3px); }
 .svc-wrap { position: relative; margin-right: calc(50% - 50vw); }
 .svc-track { padding-right: calc(50vw - 50% + 20px); }
 .svc-fade { position: absolute; top: 0; bottom: 20px; right: 0; width: 110px; background: linear-gradient(90deg, rgba(250, 250, 247, 0), #FAFAF7); pointer-events: none; }
+
+/* お問い合わせフォーム（WPZOOM Forms）。カード型のモダンな見た目に整える */
+.wpzoom-forms_form { display: block; background: #FFFFFF; border: 1px solid var(--line); border-radius: 20px; padding: 44px 44px 40px; box-shadow: 0 24px 56px rgba(20, 32, 26, 0.08); }
+.wpzoom-forms_form .wp-block-column { flex-basis: 100% !important; }
+.wpzoom-forms_form label { display: block; font-size: 13px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; margin: 26px 0 10px; }
+.wpzoom-forms_form label:first-of-type { margin-top: 0; }
+.wpzoom-forms_form label label { display: inline; margin: 0; }
+.wpzoom-forms_form .wp-block-wpzoom-forms-required { color: var(--accent); margin-left: 2px; }
+.wpzoom-forms_form input[type="text"], .wpzoom-forms_form input[type="email"], .wpzoom-forms_form input[type="tel"], .wpzoom-forms_form input[type="url"], .wpzoom-forms_form textarea, .wpzoom-forms_form select { width: 100%; box-sizing: border-box; background: var(--ground); border: 1px solid var(--line); border-radius: 12px; padding: 15px 18px; font: inherit; font-size: 15px; color: var(--ink); transition: border-color .25s ease, background .25s ease, box-shadow .25s ease; }
+.wpzoom-forms_form input:hover, .wpzoom-forms_form textarea:hover { border-color: var(--line2); }
+.wpzoom-forms_form input:focus, .wpzoom-forms_form textarea:focus, .wpzoom-forms_form select:focus { outline: none; background: #FFFFFF; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(21, 128, 61, 0.12); }
+.wpzoom-forms_form textarea { min-height: 180px; resize: vertical; }
+.wpzoom-forms_form input[type="submit"] { display: inline-flex; width: auto; margin-top: 30px; background: var(--accent); color: #FAFAF7; border: 0; border-radius: 999px; font-weight: 700; font-size: 16px; padding: 18px 56px; cursor: pointer; transition: transform .25s ease, box-shadow .25s ease, filter .25s ease; }
+.wpzoom-forms_form input[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(21, 128, 61, 0.3); filter: brightness(1.05); }
+@media (max-width: 640px) { .wpzoom-forms_form { padding: 28px 22px; } }
+
+/* 一覧行のサムネイル */
+.news-thumb { flex: 0 0 112px; }
+.news-thumb img { display: block; width: 112px; height: 72px; object-fit: cover; border-radius: 10px; transition: transform .45s cubic-bezier(.22, .9, .3, 1); }
+.news-row:hover .news-thumb img { transform: scale(1.06); }
+.news-thumb { overflow: hidden; border-radius: 10px; }
