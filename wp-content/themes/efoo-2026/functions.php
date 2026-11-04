@@ -9,6 +9,7 @@ add_filter( 'get_the_archive_title_prefix', '__return_empty_string' );
 add_action( 'after_setup_theme', function () {
 	add_theme_support( 'title-tag' );
 	add_theme_support( 'post-thumbnails' );
+	add_theme_support( 'automatic-feed-links' );
 } );
 
 /**
