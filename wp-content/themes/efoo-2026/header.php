@@ -1,6 +1,7 @@
 <?php
 /**
  * 共通ヘッダー。浮遊ピル型のナビ。トップではページ内アンカー、下層ではトップの各セクションへ飛ぶ。
+ * 狭い画面ではナビを畳み、メニューボタン（main.js）で開閉する。
  */
 $efoo_home   = home_url( '/' );
 $efoo_prefix = is_front_page() ? '' : $efoo_home;
@@ -14,10 +15,11 @@ $efoo_prefix = is_front_page() ? '' : $efoo_home;
 </head>
 <body <?php body_class(); ?>>
 
-<header style="position: sticky; top: 16px; z-index: 60; padding: 0 24px">
-	<div class="float-nav" style="display: flex; flex-wrap: wrap; align-items: center; gap: 24px; max-width: 1100px; margin: 0 auto; padding: 10px 12px 10px 30px; box-sizing: border-box; border-radius: 999px; border: 1px solid rgba(226, 231, 227, 0.8); box-shadow: 0 8px 32px rgba(20, 32, 26, 0.08)">
+<header class="site-header">
+	<div class="float-nav">
 	<a href="<?php echo esc_url( $efoo_home ); ?>" class="en" style="font-size: 26px; font-weight: 700; color: #14201A; letter-spacing: -0.02em">efoo<span class="logo-dot" style="color: var(--accent)">.</span></a>
-	<nav style="display: flex; flex-wrap: wrap; gap: 28px; margin-left: auto; align-items: center">
+	<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span class="nav-toggle-bars" aria-hidden="true"></span></button>
+	<nav id="site-nav" class="site-nav" aria-label="メインメニュー">
 		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#services' ); ?>">Services</a>
 		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#strength' ); ?>">Strength</a>
 		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#team' ); ?>">Team</a>

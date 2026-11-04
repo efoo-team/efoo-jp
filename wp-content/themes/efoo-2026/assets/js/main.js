@@ -22,6 +22,30 @@
 		history.pushState(null, '', url.hash);
 	});
 
+	// 狭い画面のメニュー開閉。Esc・メニュー外のクリック・メニュー内のリンクで閉じる
+	var siteHeader = document.querySelector('.site-header');
+	var navToggle = siteHeader && siteHeader.querySelector('.nav-toggle');
+	if (navToggle) {
+		var setNavOpen = function (open) {
+			siteHeader.classList.toggle('is-open', open);
+			navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			navToggle.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
+		};
+		navToggle.addEventListener('click', function () {
+			setNavOpen(navToggle.getAttribute('aria-expanded') !== 'true');
+		});
+		document.addEventListener('keydown', function (e) {
+			if (e.key === 'Escape' && siteHeader.classList.contains('is-open')) {
+				setNavOpen(false);
+				navToggle.focus();
+			}
+		});
+		document.addEventListener('click', function (e) {
+			if (!siteHeader.classList.contains('is-open')) { return; }
+			if (!siteHeader.contains(e.target) || e.target.closest('.site-nav a')) { setNavOpen(false); }
+		});
+	}
+
 	// スクロール連動出現のフォールバック（animation-timeline 未対応ブラウザ）
 	if (!(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'))) {
 		document.documentElement.classList.add('no-sdt');
