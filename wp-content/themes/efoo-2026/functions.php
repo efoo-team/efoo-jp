@@ -13,15 +13,13 @@ add_action( 'after_setup_theme', function () {
 } );
 
 /**
- * お知らせで扱う投稿タイプ。通常の投稿に加え、現サイトがお知らせ・掲載実績を
- * 保存している wpzoom-portfolio の portfolio_item を含める。
+ * トップのお知らせに出す投稿タイプ。お知らせ・掲載実績はすべて wpzoom-portfolio の
+ * portfolio_item に入っているため、portfolio_item だけを出す（通常の投稿には同じ告知の
+ * 複製があり、混ぜると同じ告知が 2 件並ぶ）。プラグインが無効で portfolio_item が
+ * 無いときだけ通常の投稿を出す。通常の投稿の詳細・検索・フィードはこの関数を使わない。
  */
 function efoo_news_post_types(): array {
-	$types = array( 'post' );
-	if ( post_type_exists( 'portfolio_item' ) ) {
-		$types[] = 'portfolio_item';
-	}
-	return $types;
+	return post_type_exists( 'portfolio_item' ) ? array( 'portfolio_item' ) : array( 'post' );
 }
 
 /**

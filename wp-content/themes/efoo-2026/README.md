@@ -21,7 +21,7 @@ efoo株式会社のコーポレートサイトの自作テーマ。デザイン�
 
 ## データとリンクの決まり
 
-- お知らせ・掲載実績の記事は、wpzoom-portfolio の投稿タイプ `portfolio_item` と、その分類 `portfolio` に入っている。トップのお知らせは通常の投稿と `portfolio_item` を合わせて新しい順に出す
+- お知らせ・掲載実績の記事は、wpzoom-portfolio の投稿タイプ `portfolio_item` と、その分類 `portfolio` に入っている。トップのお知らせは `portfolio_item` の新しい順に 5 件を出す（`efoo_news_post_types()`）。通常の投稿はお知らせの一覧には出さないが、個別ページ・検索結果・フィードではこれまでどおり扱う
 - お知らせ一覧の URL は `efoo_news_index_url()` が `portfolio_item` のアーカイブから引く（無ければ投稿ページ、それも無ければトップ）
 - 会社概要は固定ページのスラッグ `company`、お問い合わせは `contact-us`（無ければ `contact`、タイトル「お問い合わせ」の順）から URL を引く（`efoo_company_url()`・`efoo_contact_url()`）。会社概要のページが無いときは、ヘッダーとフッターにリンクを出さない
 - フッターの SNS（X・Instagram・YouTube）は、シェフレピの公式アカウントへリンクする
