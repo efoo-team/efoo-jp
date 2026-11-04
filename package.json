@@ -6,7 +6,7 @@
 		"node": ">=22.13.0"
 	},
 	"scripts": {
-		"setup": "bash scripts/setup.sh",
+		"env:setup": "bash scripts/setup.sh",
 		"env:start": "wp-env start",
 		"env:stop": "wp-env stop",
 		"env:pull": "bash scripts/pull.sh",

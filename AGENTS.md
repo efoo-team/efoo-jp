@@ -8,7 +8,7 @@ efoo株式会社のコーポレートサイト https://efoo.jp/ を運用・改�
 
 ### 初めて環境を作るとき
 
-リポジトリの直下で `pnpm setup`（`bash scripts/setup.sh`）を実行する。前提の確認、`pnpm install`、`wp-env start`、本番の内容の取り込みまでを一度に行い、何度実行してもよい。終わると http://localhost:8890/ でサイトが開ける。管理画面 http://localhost:8890/wp-admin/ には `admin` / `password` でログインできる。
+リポジトリの直下で `pnpm env:setup`（`bash scripts/setup.sh`）を実行する。前提の確認、`pnpm install`、`wp-env start`、本番の内容の取り込みまでを一度に行い、何度実行してもよい。終わると http://localhost:8890/ でサイトが開ける。管理画面 http://localhost:8890/wp-admin/ には `admin` / `password` でログインできる。
 
 前提と、満たされていないときの対処は次のとおりである。`scripts/setup.sh` は、満たされていない前提を名指しして止まる。
 
@@ -24,7 +24,7 @@ efoo株式会社のコーポレートサイト https://efoo.jp/ を運用・改�
 ローカルのサイトの中身（DB、テーマ、プラグイン、画像）は、本番のバックアップから取り込む。手に入れ方は 2 通りある。
 
 - **本番へ SSH で接続できる場合**：`scripts/setup.sh` が自動でバックアップを取得する。接続には、サーバーに公開鍵が登録されている必要がある。鍵が `~/.ssh` の既定の名前（`id_ed25519`・`id_rsa` など）でなければ、`EFOO_SSH_KEY=~/.ssh/<鍵のファイル>` を付けて実行する。接続を確かめるコマンドは `ssh -p 8022 -o IdentitiesOnly=yes r0884593@www1068.onamae.ne.jp true` である。公開鍵の登録は、お名前.com のサーバーの管理者に依頼する。
-- **SSH で接続できない場合**：接続できる人に、`pnpm backup` で取得したフォルダ `.local/backups/<日時>/` を丸ごと受け取る。受け取ったフォルダを、同じ名前でこのリポジトリの `.local/backups/` に置いてから `pnpm setup` を実行する。このフォルダには、DB のパスワード（`files/wp-config.php`）と、問い合わせなどの DB の内容が入っている。受け渡しは公開の場所を通さずに行う。
+- **SSH で接続できない場合**：接続できる人に、`pnpm backup` で取得したフォルダ `.local/backups/<日時>/` を丸ごと受け取る。受け取ったフォルダを、同じ名前でこのリポジトリの `.local/backups/` に置いてから `pnpm env:setup` を実行する。このフォルダには、DB のパスワード（`files/wp-config.php`）と、問い合わせなどの DB の内容が入っている。受け渡しは公開の場所を通さずに行う。
 
 ### よく使うコマンド
 
