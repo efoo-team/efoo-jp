@@ -6,6 +6,12 @@
 
 add_filter( 'get_the_archive_title_prefix', '__return_empty_string' );
 
+/*
+ * 本文中の裸の URL をリンクにする。oEmbed に解決できず URL の文字列だけが残った埋め込みや、
+ * プレスリリース末尾の会社概要の URL が対象。oEmbed（優先度 8）の後に走らせる。
+ */
+add_filter( 'the_content', 'make_clickable', 12 );
+
 add_action( 'after_setup_theme', function () {
 	add_theme_support( 'title-tag' );
 	add_theme_support( 'post-thumbnails' );
@@ -37,6 +43,46 @@ function efoo_entry_term_label( ?WP_Post $post = null ): string {
 		}
 	}
 	return 'お知らせ';
+}
+
+/**
+ * 記事が属する portfolio の分類（先頭の 1 件）。分類が無い記事・通常の投稿は null。
+ */
+function efoo_entry_term( ?WP_Post $post = null ): ?WP_Term {
+	if ( ! taxonomy_exists( 'portfolio' ) ) {
+		return null;
+	}
+	$terms = get_the_terms( get_post( $post ), 'portfolio' );
+	return ( $terms && ! is_wp_error( $terms ) ) ? $terms[0] : null;
+}
+
+/**
+ * 記事詳細での記事の役割。portfolio の term ID で決め、CSS のクラス名（entry--<役割>）と
+ * 記事の終わりの出し分けに使う（slug はパーセントエンコードされた日本語のため使わない）。
+ * 対応表に無い分類・分類の無い記事・通常の投稿は 'post' で、共通の見た目にする。
+ */
+function efoo_entry_role( ?WP_Post $post = null ): string {
+	$roles = array(
+		16 => 'press', // プレスリリース
+		19 => 'media', // 掲載実績
+		18 => 'blog',  // シェフレピ店長ブログ
+	);
+	$term = efoo_entry_term( $post );
+	return ( $term && isset( $roles[ $term->term_id ] ) ) ? $roles[ $term->term_id ] : 'post';
+}
+
+/**
+ * 記事詳細にアイキャッチを出すか。本文にアイキャッチと同じ添付画像が入っている記事では出さない。
+ * ブロックエディタは画像に class="wp-image-<添付 ID>" を書くため、本文にその文字列があるかで判定する
+ * （HTML は解析しない）。ID の後ろに数字が続くもの（ID 49 に対する wp-image-492 など）は別の画像として扱う。
+ */
+function efoo_entry_shows_cover( ?WP_Post $post = null ): bool {
+	$post     = get_post( $post );
+	$thumb_id = (int) get_post_thumbnail_id( $post );
+	if ( ! $post || ! $thumb_id ) {
+		return false;
+	}
+	return ! preg_match( '/wp-image-' . $thumb_id . '(?![0-9])/', $post->post_content );
 }
 
 /**
