@@ -10,6 +10,7 @@
 		"wp-content/uploads": "./.local/site/wp-content/uploads",
 		"wp-content/languages": "./.local/site/wp-content/languages",
 		"wp-content/mu-plugins": "./wp-content/mu-plugins",
+		"wp-content/themes/efoo-2026": "./wp-content/themes/efoo-2026",
 		"efoo-import": "./.local/import"
 	},
 	"config": {
