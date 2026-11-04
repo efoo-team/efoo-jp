@@ -41,8 +41,8 @@ a:hover { color: var(--ink); }
 .news-row:hover { background: var(--band); }
 
 .cursor { display: inline-block; width: 10px; height: 1.1em; background: var(--accent); vertical-align: text-bottom; margin-left: 6px; animation: blink 1.1s steps(1) infinite; }
-.marquee-inner { display: flex; gap: 64px; align-items: center; flex-shrink: 0; animation: marquee 28s linear infinite; }
-.marquee-rev { font-size: 22px; font-weight: 700; letter-spacing: 0.24em; animation-duration: 40s; animation-direction: reverse; }
+.marquee-inner { display: flex; gap: 64px; align-items: center; flex-shrink: 0; animation: marquee 60s linear infinite; }
+.marquee-rev { font-size: 22px; font-weight: 700; letter-spacing: 0.24em; animation-duration: 80s; animation-direction: reverse; }
 .dot { position: absolute; border-radius: 50%; background: var(--accent); animation: floatY 7s ease-in-out infinite; }
 .glow { animation: pulseGlow 6s ease-in-out infinite; }
 .ghost { color: transparent; -webkit-text-stroke: 1px #C9D4CE; }
