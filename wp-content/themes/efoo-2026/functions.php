@@ -41,41 +41,51 @@ function efoo_entry_term_label( ?WP_Post $post = null ): string {
 }
 
 /**
- * お知らせ一覧のURL。投稿ページが設定されていればそれを、無ければ
- * portfolio／カテゴリのうち記事数の多い分類のアーカイブを使う。
+ * お知らせ一覧のURL。お知らせ・掲載実績の記事は portfolio_item に入っているため、
+ * そのアーカイブ（wpzoom-portfolio の設定ではスラッグ project）を正とする。
+ * portfolio_item が無ければ投稿ページ、それも無ければトップ。
  */
 function efoo_news_index_url(): string {
+	if ( post_type_exists( 'portfolio_item' ) ) {
+		$link = get_post_type_archive_link( 'portfolio_item' );
+		if ( $link ) {
+			return (string) $link;
+		}
+	}
 	$posts_page = (int) get_option( 'page_for_posts' );
 	if ( $posts_page ) {
 		return (string) get_permalink( $posts_page );
-	}
-	$terms = get_terms(
-		array(
-			'taxonomy'   => array_filter( array( 'portfolio', 'category' ), 'taxonomy_exists' ),
-			'hide_empty' => true,
-			'number'     => 1,
-			'orderby'    => 'count',
-			'order'      => 'DESC',
-		)
-	);
-	if ( $terms && ! is_wp_error( $terms ) ) {
-		$link = get_term_link( $terms[0] );
-		if ( ! is_wp_error( $link ) ) {
-			return (string) $link;
-		}
 	}
 	return home_url( '/' );
 }
 
 /**
- * お問い合わせページのURL。スラッグ contact → タイトル「お問い合わせ」の順に探し、無ければトップのCTAへ。
+ * 公開中の固定ページのURLを、候補のスラッグの順に探す。見つからなければ null。
  */
-function efoo_contact_url(): string {
-	foreach ( array( 'contact-us', 'contact' ) as $slug ) {
+function efoo_page_url( array $slugs ): ?string {
+	foreach ( $slugs as $slug ) {
 		$page = get_page_by_path( $slug );
-		if ( $page instanceof WP_Post ) {
+		if ( $page instanceof WP_Post && 'publish' === $page->post_status ) {
 			return (string) get_permalink( $page );
 		}
+	}
+	return null;
+}
+
+/**
+ * 会社概要ページのURL（スラッグ company）。ページが無ければ null で、呼び出し側はリンクを出さない。
+ */
+function efoo_company_url(): ?string {
+	return efoo_page_url( array( 'company' ) );
+}
+
+/**
+ * お問い合わせページのURL。スラッグ contact-us → contact → タイトル「お問い合わせ」の順に探し、無ければトップのCTAへ。
+ */
+function efoo_contact_url(): string {
+	$url = efoo_page_url( array( 'contact-us', 'contact' ) );
+	if ( $url ) {
+		return $url;
 	}
 	$q = new WP_Query(
 		array(

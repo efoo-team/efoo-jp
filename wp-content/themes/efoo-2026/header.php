@@ -23,8 +23,10 @@ $efoo_prefix = is_front_page() ? '' : $efoo_home;
 		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#services' ); ?>">Services</a>
 		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#strength' ); ?>">Strength</a>
 		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#team' ); ?>">Team</a>
-		<a class="nav-link" href="<?php echo esc_url( efoo_news_index_url() ); ?>">Contents</a>
-		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#contact' ); ?>">会社概要</a>
+		<a class="nav-link" href="<?php echo esc_url( efoo_news_index_url() ); ?>">お知らせ</a>
+		<?php if ( efoo_company_url() ) { ?>
+		<a class="nav-link" href="<?php echo esc_url( efoo_company_url() ); ?>">会社概要</a>
+		<?php } ?>
 		<a class="pill-cta" href="<?php echo esc_url( efoo_contact_url() ); ?>" style="background: var(--accent); color: #FAFAF7; font-weight: 700; font-size: 14px; padding: 12px 26px; border-radius: 999px">お問い合わせ</a>
 	</nav>
 	</div>

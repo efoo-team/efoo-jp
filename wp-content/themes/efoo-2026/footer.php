@@ -18,6 +18,9 @@
 			</div>
 			<div style="display: flex; flex-direction: column; gap: 12px">
 				<span class="en" style="font-size: 12px; letter-spacing: 0.2em; color: #6B776F">COMPANY</span>
+				<?php if ( efoo_company_url() ) { ?>
+				<a href="<?php echo esc_url( efoo_company_url() ); ?>" style="font-size: 14px">会社概要</a>
+				<?php } ?>
 				<a href="<?php echo esc_url( home_url( '/#team' ) ); ?>" style="font-size: 14px">チーム</a>
 				<a href="<?php echo esc_url( efoo_news_index_url() ); ?>" style="font-size: 14px">お知らせ</a>
 				<a href="<?php echo esc_url( efoo_contact_url() ); ?>" style="font-size: 14px">お問い合わせ</a>
