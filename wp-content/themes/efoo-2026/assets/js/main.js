@@ -269,33 +269,62 @@
 		video.pause();
 	}
 
-	// サービススライダー。1枚ずつ送り、ゲージはスクロール量に連動
+	// サービススライダー。1枚ずつ送り、ゲージはスクロール量に連動。
+	// 停止位置の列は「各カードの左端（scroll-snap-align: start の位置）を末尾 max で頭打ちにしたもの」に
+	// 末尾 max を加えた昇順の列で、ボタン操作とスクロール位置の判定の両方がこの列を使う。
+	// カード幅は画面幅で変わるため、列は使うたびに DOM から求める
 	var track = document.querySelector('.svc-track');
 	var bar = document.getElementById('svc-bar');
 	if (track) {
-		var STEP = 468;
-		var pos = 0;
-		var slideAt = 0;
-		var go = function (dir) {
+		var stops = function () {
 			var max = track.scrollWidth - track.clientWidth;
-			var maxIdx = Math.ceil(max / STEP);
-			pos = Math.max(0, Math.min(maxIdx, pos + dir));
-			slideAt = Date.now();
-			track.scrollTo({ left: Math.min(max, pos * STEP), behavior: REDUCE ? 'auto' : 'smooth' });
+			var origin = track.getBoundingClientRect().left - track.scrollLeft;
+			var list = [];
+			Array.prototype.forEach.call(track.children, function (card) {
+				var at = Math.min(max, Math.max(0, Math.round(card.getBoundingClientRect().left - origin)));
+				if (!list.length || at - list[list.length - 1] > 1) { list.push(at); }
+			});
+			if (!list.length || max - list[list.length - 1] > 1) { list.push(max); }
+			return list;
 		};
+		// 送り中（smooth スクロールの途中）は、現在位置ではなく送り先を基準にして連打に追従する
+		var target = null;
+		var go = function (dir) {
+			var list = stops();
+			var base = target !== null ? target : track.scrollLeft;
+			var to = null;
+			if (dir > 0) {
+				for (var i = 0; i < list.length; i++) { if (list[i] > base + 1) { to = list[i]; break; } }
+			} else {
+				for (var j = list.length - 1; j >= 0; j--) { if (list[j] < base - 1) { to = list[j]; break; } }
+			}
+			if (to === null) { return; }
+			target = to;
+			track.scrollTo({ left: to, behavior: REDUCE ? 'auto' : 'smooth' });
+		};
+		var settle = function () { target = null; };
+		if ('onscrollend' in window) {
+			track.addEventListener('scrollend', settle);
+		} else {
+			var settleTimer = 0;
+			track.addEventListener('scroll', function () {
+				clearTimeout(settleTimer);
+				settleTimer = setTimeout(settle, 150);
+			});
+		}
 		var prev = document.getElementById('svc-prev');
 		var next = document.getElementById('svc-next');
 		if (prev) { prev.addEventListener('click', function () { go(-1); }); }
 		if (next) { next.addEventListener('click', function () { go(1); }); }
-		setInterval(function () {
-			var max = track.scrollWidth - track.clientWidth;
-			var p = max > 0 ? (track.scrollLeft / max) : 0;
-			if (Date.now() - slideAt > 800) {
-				pos = Math.round(track.scrollLeft / STEP);
-			}
-			if (bar) {
+		if (bar) {
+			var drawBar = function () {
+				var max = track.scrollWidth - track.clientWidth;
+				var p = max > 0 ? (track.scrollLeft / max) : 0;
 				bar.style.width = Math.round(25 + p * 75) + '%';
-			}
-		}, 250);
+			};
+			track.addEventListener('scroll', drawBar, { passive: true });
+			window.addEventListener('resize', drawBar);
+			drawBar();
+		}
 	}
 })();
