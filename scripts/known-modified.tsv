@@ -1,0 +1,5 @@
+# check.sh が許容する、公式配布物と異なるプラグインのファイル。
+# plugin_name	file	sha256（サーバー上の現在の内容）	理由
+hello	hello.php	f734fcd99f9d1c539d09483e39905b3a0934b806e4fbdfb14880b278d5b9e109	WordPress 本体に同梱された版で、WordPress.org の配布版と翻訳ドメインの 1 行だけが違う
+wpzoom-portfolio	wpzoom-portfolio.php	e565dc7590f77b7ad858c5c667221bc936ad3557a1987294926e498d0eb19154	独自改修の注記（patches/wpzoom-portfolio-1.4.10.diff）
+wpzoom-portfolio	build/blocks/portfolio/index.php	2170a7ce5621697461cb0a91df232c55530c50270bcccd722b1051778499638e	カテゴリを説明文の順に並べる独自改修（patches/wpzoom-portfolio-1.4.10.diff）

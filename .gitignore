@@ -1,0 +1,5 @@
+# バックアップ（DB ダンプ・wp-config.php を含む）、ローカル環境に取り込んだ本番の wp-content
+.local/
+node_modules/
+.playwright-mcp/
+.DS_Store

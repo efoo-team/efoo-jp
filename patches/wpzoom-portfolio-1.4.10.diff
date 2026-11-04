@@ -1,0 +1,31 @@
+--- a/wpzoom-portfolio/wpzoom-portfolio.php
++++ b/wpzoom-portfolio/wpzoom-portfolio.php
+@@ -8,10 +8,11 @@
+  * @license   GPL-2.0-or-later
+  *
+  * @wordpress-plugin
+- * Plugin Name: WPZOOM Portfolio Lite
++ * Plugin Name: WPZOOM Portfolio Lite（自動更新禁止）
+  * Plugin URI:  https://www.wpzoom.com/plugins/portfolio-pro/
+- * Description: The ultimate solution for creatives, designers, photographers, and businesses looking to showcase their work in an elegant, professional, and fully customizable way.
+- * Author:      WPZOOM
++ * Description: このPluginは変更を行っています。アップデートを行う際はabekまでご連絡を。(@see: /wpzoom-portfolio/build/blocks/portfolio/index.php)
++ * Author:      WPZOOM
++ * Author:      WPZOOM
+  * Author URI:  https://www.wpzoom.com
+  * Text Domain: wpzoom-portfolio
+  * Version:     1.4.10
+--- a/wpzoom-portfolio/build/blocks/portfolio/index.php
++++ b/wpzoom-portfolio/build/blocks/portfolio/index.php
+@@ -1094,6 +1094,11 @@
+ 		// Attempt to get all the categories using the above parameters
+ 		$categories = get_categories( $args );
+ 
++		// 取得したカテゴリの並び替え
++		usort($categories, function ($a, $b) {
++			return $a->category_description <=> $b->category_description;
++		});
++
+ 
+ 		// The string that will be output
+ 		$output = '';

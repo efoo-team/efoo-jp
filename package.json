@@ -1,0 +1,20 @@
+{
+	"name": "efoo-jp",
+	"private": true,
+	"packageManager": "pnpm@10.24.0",
+	"engines": {
+		"node": ">=22.13.0"
+	},
+	"scripts": {
+		"setup": "bash scripts/setup.sh",
+		"env:start": "wp-env start",
+		"env:stop": "wp-env stop",
+		"env:pull": "bash scripts/pull.sh",
+		"wp": "wp-env run cli wp",
+		"check": "bash scripts/check.sh",
+		"backup": "bash scripts/backup.sh"
+	},
+	"devDependencies": {
+		"@wordpress/env": "12.1.0"
+	}
+}
