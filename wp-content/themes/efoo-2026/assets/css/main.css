@@ -15,6 +15,8 @@
 	--header-h: 66px;
 }
 
+/* アンカーの着地位置を追従ヘッダーの下にする（ページ内リンク・送信後の #wpzf-… など全ページ共通） */
+html { scroll-padding-top: calc(var(--header-top) + var(--header-h) + 16px); }
 body { margin: 0; background: var(--ground); color: var(--ink); font-family: 'Noto Sans JP', sans-serif; }
 a { color: var(--muted); text-decoration: none; }
 a:hover { color: var(--ink); }
