@@ -46,8 +46,9 @@
 		});
 	}
 
-	// スクロール連動出現のフォールバック（animation-timeline 未対応ブラウザ）
-	if (!(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'))) {
+	// スクロール連動出現のフォールバック（animation-timeline 未対応ブラウザ）。
+	// 動きを減らす設定では CSS が出現の演出を適用しないため、ここでも何もしない
+	if (!REDUCE && !(window.CSS && CSS.supports && CSS.supports('animation-timeline: view()'))) {
 		document.documentElement.classList.add('no-sdt');
 		if ('IntersectionObserver' in window) {
 			var io = new IntersectionObserver(function (entries) {
