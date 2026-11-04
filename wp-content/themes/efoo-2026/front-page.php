@@ -56,10 +56,14 @@ get_header();
 		<div class="marquee-inner en" style="color: #6B776F; font-size: 16px; font-weight: 500; letter-spacing: 0.22em; white-space: nowrap; padding-right: 64px">
 			<span>CHEFREPI</span><span style="color: var(--accent)">●</span><span>L-SHIFT</span><span style="color: var(--accent)">●</span><span>AI WORKFLOW</span><span style="color: var(--accent)">●</span><span>EC SITE</span><span style="color: var(--accent)">●</span><span>CORPORATE SITE</span><span style="color: var(--accent)">●</span><span>BUSINESS SYSTEM</span><span style="color: var(--accent)">●</span>
 			<span>CHEFREPI</span><span style="color: var(--accent)">●</span><span>L-SHIFT</span><span style="color: var(--accent)">●</span><span>AI WORKFLOW</span><span style="color: var(--accent)">●</span><span>EC SITE</span><span style="color: var(--accent)">●</span><span>CORPORATE SITE</span><span style="color: var(--accent)">●</span><span>BUSINESS SYSTEM</span><span style="color: var(--accent)">●</span>
+			<span>CHEFREPI</span><span style="color: var(--accent)">●</span><span>L-SHIFT</span><span style="color: var(--accent)">●</span><span>AI WORKFLOW</span><span style="color: var(--accent)">●</span><span>EC SITE</span><span style="color: var(--accent)">●</span><span>CORPORATE SITE</span><span style="color: var(--accent)">●</span><span>BUSINESS SYSTEM</span><span style="color: var(--accent)">●</span>
+			<span>CHEFREPI</span><span style="color: var(--accent)">●</span><span>L-SHIFT</span><span style="color: var(--accent)">●</span><span>AI WORKFLOW</span><span style="color: var(--accent)">●</span><span>EC SITE</span><span style="color: var(--accent)">●</span><span>CORPORATE SITE</span><span style="color: var(--accent)">●</span><span>BUSINESS SYSTEM</span><span style="color: var(--accent)">●</span>
 		</div>
 	</div>
 	<div style="display: flex">
 		<div class="marquee-inner marquee-rev en ghost" style="white-space: nowrap; padding-right: 64px">
+			<span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span><span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span>
+			<span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span><span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span>
 			<span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span><span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span>
 			<span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span><span>FOOD × TECHNOLOGY</span><span>UPDATE THE FOOD WORLD</span>
 		</div>
@@ -72,7 +76,7 @@ get_header();
 		<p class="en" style="margin: 0; color: var(--accent); font-size: 14px; font-weight: 500; letter-spacing: 0.3em">OUR SERVICES</p>
 		<h2 style="margin: 0; font-size: 44px; font-weight: 900; color: #14201A">自社サービスと、食に精通した開発</h2>
 	</div>
-	<div style="position: relative">
+	<div class="svc-wrap">
 	<div class="svc-track">
 		<article class="card sr" style="flex: 0 0 440px; scroll-snap-align: start; display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E2E7E3; border-radius: 20px; overflow: hidden; box-sizing: border-box">
 			<div style="position: relative; overflow: hidden">
@@ -157,7 +161,7 @@ get_header();
 			</div>
 		</article>
 	</div>
-	<div aria-hidden="true" style="position: absolute; top: 0; bottom: 20px; right: -4px; width: 110px; background: linear-gradient(90deg, rgba(250, 250, 247, 0), #FAFAF7); pointer-events: none"></div>
+	<div aria-hidden="true" class="svc-fade"></div>
 	</div>
 	<div class="sr" style="display: flex; align-items: center; gap: 28px">
 		<div style="flex: 1 1 auto; height: 2px; background: #E2E7E3; border-radius: 999px; overflow: hidden"><div id="svc-bar" style="height: 100%; background: var(--accent); width: 25%; transition: width .25s ease"></div></div>
