@@ -29,7 +29,7 @@
 			<a class="sns-btn" href="https://www.youtube.com/@chefrepi" target="_blank" rel="noopener" aria-label="YouTube（シェフレピ公式）" style="display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; border: 1px solid #C6CEC9; border-radius: 50%"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4"></rect><path d="M10 9l5 3-5 3z"></path></svg></a>
 		</div>
 	</div>
-	<p class="en" aria-hidden="true" style="max-width: 1240px; margin: 0 auto; padding: 0 32px; box-sizing: border-box; font-size: 220px; font-weight: 700; line-height: 0.85; letter-spacing: -0.05em; color: #EDF1EE; user-select: none">efoo<span style="color: #DCEFE2">.</span></p>
+	<p class="en footer-logo" aria-hidden="true">efoo<span style="color: #DCEFE2">.</span></p>
 	<p class="en" style="max-width: 1240px; margin: 0 auto; padding: 0 32px 40px; box-sizing: border-box; font-size: 12px; color: #6B776F; letter-spacing: 0.06em">© efoo Inc. All rights reserved.</p>
 </footer>
 
