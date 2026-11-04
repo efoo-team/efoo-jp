@@ -1,7 +1,9 @@
 <?php
 /**
  * お知らせ一覧の本体。メインループの行とページ送りを出す。
+ * $args['empty'] で 0 件のときの文言を変えられる（検索結果など）。
  */
+$efoo_empty = isset( $args['empty'] ) ? (string) $args['empty'] : '記事がまだありません。';
 ?>
 <div style="display: flex; flex-direction: column">
 	<?php
@@ -22,7 +24,7 @@
 		}
 	} else {
 		?>
-	<p style="margin: 0; padding: 40px 20px; color: #44504A; border-top: 1px solid #E2E7E3">記事がまだありません。</p>
+	<p style="margin: 0; padding: 40px 20px; color: #44504A; border-top: 1px solid #E2E7E3"><?php echo esc_html( $efoo_empty ); ?></p>
 		<?php
 	}
 	?>
