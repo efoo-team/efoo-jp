@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# 本番 docroot の .htaccess の「# BEGIN efoo cache」〜「# END efoo cache」を、server/htaccess/efoo-cache.conf の内容にする。
+# 本番 docroot の .htaccess の「# BEGIN efoo cache」〜「# END efoo cache」を、origin/main の server/htaccess/efoo-cache.conf の内容にする。
+# どのチェックアウト・ブランチで実行しても、設定は作業ツリーではなく fetch した origin/main から読む（scripts/lib.sh の extract_deploy_ref）。
 # 区間がまだ無ければ .htaccess の末尾に足す。区間の外（# BEGIN WordPress の区間など）は変えない。
 #   bash scripts/deploy-htaccess.sh --dry-run            書き換えた後との差分を表示するだけ（本番の .htaccess には書かない）
 #   bash scripts/deploy-htaccess.sh --yes                書き換え、nginx のキャッシュを消して、トップが使う CSS・JS・動画・フォント・画像の応答ヘッダーを確かめる
@@ -9,7 +10,9 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 MARKER='efoo cache'
-CONF="$REPO_ROOT/server/htaccess/efoo-cache.conf"
+CONF_PATH=server/htaccess/efoo-cache.conf
+# origin/main から一時ディレクトリへ展開した設定ファイル。main で決める。
+CONF=
 HELPER="$REPO_ROOT/scripts/htaccess-block.php"
 HTACCESS="$DOCROOT/.htaccess"
 # 本番で有効な自作テーマの URL。verify はこのテーマの CSS・JS・フォントを確かめる。
@@ -29,6 +32,7 @@ ROLLBACK_FROM=
 LOCAL_SAVED=
 
 # サーバーの wp-cli で scripts/htaccess-block.php を実行する。$1 は render か write。
+# htaccess-block.php は送る内容ではなく、このスクリプトと引数の形を合わせて動く道具なので、このスクリプトと同じ作業ツリーの版を使う。
 # 区間を設定の内容にするか（set）、中身を空にするか（remove）は、--remove の有無だけで決め、引数で明示して渡す。
 run_helper() {
 	if [ "$REMOVE" = 1 ]; then
@@ -139,15 +143,8 @@ on_exit() {
 }
 
 main() {
-	local mode stamp saved code ng=0
-	case "${1:-}" in
-	--dry-run) mode=dry ;;
-	--yes) mode=yes ;;
-	*)
-		echo "--dry-run か --yes を指定する（区間の中身を空にするときは、続けて --remove）" >&2
-		exit 1
-		;;
-	esac
+	local stamp saved code ng=0
+	read_mode "${1:-}" "（区間の中身を空にするときは、続けて --remove）"
 	case "${2:-}" in
 	'') ;;
 	--remove) REMOVE=1 ;;
@@ -157,14 +154,17 @@ main() {
 		;;
 	esac
 
-	if [ "$REMOVE" = 0 ] && ! conf_has_directive; then
-		echo "$CONF に、空行とコメント行のほかの行が無い（または読めない）。保存期間を外すときは --remove を付ける" >&2
-		exit 1
-	fi
-
 	TMP="$(mktemp -d)"
 	trap on_exit EXIT
 	trap 'exit 1' INT TERM HUP
+	if [ "$REMOVE" = 0 ]; then
+		extract_deploy_ref "$TMP" "$CONF_PATH"
+		CONF="$TMP/$CONF_PATH"
+		if ! conf_has_directive; then
+			echo "$DEPLOY_REF の $CONF_PATH に、空行とコメント行のほかの行が無い。保存期間を外すときは --remove を付ける" >&2
+			exit 1
+		fi
+	fi
 	php_lint "$HELPER"
 	remote "cat '$HTACCESS'" >"$TMP/current"
 	run_helper render >"$TMP/new"
@@ -172,7 +172,7 @@ main() {
 	if diff -u --label "${HTACCESS}（今）" --label "${HTACCESS}（書き換えた後）" "$TMP/current" "$TMP/new"; then
 		echo "差分なし"
 	fi
-	[ "$mode" = yes ] || return 0
+	[ "$MODE" = yes ] || return 0
 
 	if ! cmp -s "$TMP/current" "$TMP/new"; then
 		stamp="$(date +%Y%m%d-%H%M%S)"

@@ -48,7 +48,7 @@ pnpm wp <args>          # ローカルの wp-cli
 - **版を本番に揃える**：WordPress の版（`core`）と PHP の版（`phpVersion`）は、`.wp-env.json` で本番に揃えてある。本番の WordPress を更新したら、`core` の URL も合わせる。
 - **ポート**：8890 を使う。8888・8889 は、ほかのプロジェクトの wp-env が使っていることが多いためである。8890 が使用中なら、`WP_ENV_PORT=<空いているポート>` を付けて `pnpm env:start` と `pnpm env:pull` を実行する。取り込み時の URL の置き換えも、そのポートで行われる。
 - **取り込み直すと消えるもの**：`scripts/pull.sh` は、ローカルの DB と `.local/site/wp-content/` の plugins・themes・uploads・languages を、バックアップの内容で置き換える。そのうえで URL を `https://efoo.jp` から `http://localhost:<ポート>` に置き換える。ローカルの管理画面で行った変更は、取り込み直すと消える。
-- **mu-plugin はすぐ反映される**：`wp-content/mu-plugins/` はリポジトリのディレクトリをそのまま割り当てているため、編集はすぐローカルに反映される。
+- **mu-plugin はすぐ反映される**：`wp-content/mu-plugins/` はリポジトリのディレクトリをそのまま割り当てているため、編集はすぐローカルに反映される。本番へは、main へマージしてから `scripts/deploy-mu-plugins.sh` で送る（下の「本番を変更するときの手順」）。
 - **wp-cli の出力に出る警告**：ローカルは `WP_DEBUG` が有効なため、`Deprecated` や `Notice`（insert-headers-and-footers、Inspiro が原因）が出る。動作には影響しない。
 
 ## サーバー
@@ -93,15 +93,31 @@ bash scripts/install-wp-cli.sh   # サーバーの ~/bin/wp に wp-cli を導入
 
 1. `pnpm env:pull --fresh` で本番の最新状態をローカルに取り込み、ローカルで変更して表示を確かめる。
 2. `pnpm backup` で本番のバックアップを取る（手順 1 で取得していれば不要）。
-3. 本番を変更する。プラグインやテーマの更新は `php ~/bin/wp --path=... plugin update <name>` のように wp-cli で行う。`wp-content/mu-plugins/` の変更は `bash scripts/deploy-mu-plugins.sh --dry-run` で確かめてから `--yes` で反映する。自作テーマ `wp-content/themes/efoo-2026/` の変更は、main へマージしてから `bash scripts/deploy-theme.sh --dry-run` で確かめ、`--yes` で反映する（使い方はテーマの README の「本番への反映」）。静的ファイルの保存期間（`server/htaccess/efoo-cache.conf`）の変更は、`bash scripts/deploy-htaccess.sh --dry-run` で確かめてから `--yes` で反映する（下の「静的ファイルの保存期間」）。
+3. 本番を変更する。プラグインやテーマの更新は `php ~/bin/wp --path=... plugin update <name>` のように wp-cli で行う。リポジトリで管理するものは、変更を main へマージしてから、下の表のスクリプトを `--dry-run` で確かめ、`--yes` で反映する。
 4. `pnpm check` で点検し、https://efoo.jp/ の表示を確かめる。
 5. 公式配布物と異なるファイルを意図して作ったときは、`scripts/known-modified.tsv` に登録する。
 
 本番への書き込み（更新・削除・設定変更・ファイル配置）は、ユーザーの明示指示があるときだけ行う。
 
+### リポジトリから本番へ送るスクリプト
+
+| 送るもの | スクリプト | 使い方 |
+| --- | --- | --- |
+| `wp-content/mu-plugins/` | `scripts/deploy-mu-plugins.sh` | 下記 |
+| 自作テーマ `wp-content/themes/efoo-2026/` | `scripts/deploy-theme.sh` | テーマの README の「本番への反映」 |
+| 静的ファイルの保存期間（`server/htaccess/efoo-cache.conf`） | `scripts/deploy-htaccess.sh` | 下の「静的ファイルの保存期間」 |
+
+3 つとも、送る内容は作業ツリーではなく、`git fetch` した `origin/main` から取り出す（`scripts/lib.sh` の `extract_deploy_ref`）。どのワークツリーで、どのブランチを開いて実行しても、本番へ送る内容は `origin/main` と同じになる。
+
+- 実行すると、まず送るコミット（`origin/main` の先頭）を表示する。`origin` の `main` を fetch できないとき（オフラインなど）と、送るパスが `origin/main` に無いときは、何も送らずに終了コード 1 で止まる
+- 送るパスに、作業ツリーの未コミットの変更（未追跡のファイルを含む）か、開いているブランチにあって `origin/main` に無いコミットがあれば、それらが送られないことを一覧で表示する。止まりはしない。作業ツリーが `origin/main` より古いだけのときは何も表示せず、送るのは `origin/main` である
+- スクリプト自体は、実行したチェックアウトの版が動く
+
+`scripts/deploy-mu-plugins.sh` は、`origin/main` の `wp-content/mu-plugins/` を本番の同じパスへ同期し、`origin/main` に無いファイルは本番から消す。送る前にディレクトリ 755・ファイル 644 に揃え、全 PHP ファイルの構文を確かめる。差の判定は checksum で行い、更新時刻は送らない。`--dry-run` の出力の読み方は、テーマの README の「本番への反映」と同じである。`--yes` は、送ったあとに本番の mu-plugin の一覧、権限、トップページの 200 を確かめ、満たさないものがあれば終了コード 1 で終わる。
+
 ## 静的ファイルの保存期間
 
-本番の docroot の `.htaccess` の `# BEGIN efoo cache`〜`# END efoo cache` の区間が、CSS・JS・画像・動画・フォントの応答に `Cache-Control: max-age` と `Expires` を付け、ブラウザに保存させる期間を決める。区間の中身の正本は `server/htaccess/efoo-cache.conf` であり、本番の `.htaccess` を直接編集しても、次の反映で上書きされる。
+本番の docroot の `.htaccess` の `# BEGIN efoo cache`〜`# END efoo cache` の区間が、CSS・JS・画像・動画・フォントの応答に `Cache-Control: max-age` と `Expires` を付け、ブラウザに保存させる期間を決める。区間の中身の正本は `origin/main` の `server/htaccess/efoo-cache.conf` であり、本番の `.htaccess` を直接編集しても、次の反映で上書きされる。
 
 | ファイル | 保存期間 |
 | --- | --- |
@@ -124,7 +140,7 @@ bash scripts/deploy-htaccess.sh --yes --remove       # 区間の中身を空に�
 
 - 書き換えは、サーバーの wp-cli から WordPress の `insert_with_markers()` で行う。区間がまだ無ければ `.htaccess` の末尾（`# END WordPress` の後）に足し、区間の外は変えない。WordPress がパーマリンクの保存で書き換えるのは `# BEGIN WordPress` の区間だけなので、この区間は残る。`insert_with_markers()` は末尾に改行を付けずに書くため、区間を初めて足すときの `--dry-run` の差分には、`# END WordPress` の行が `-`（`\ No newline at end of file` 付き）と `+` の両方に出る。行の中身は同じで、後ろに行が続くようになっただけであり、書き換えに害はない
 - `--yes` は、書き換える前の `.htaccess` を、サーバーの `~/htaccess-before-deploy/efoo.jp-<日時>` と手元の `.local/htaccess-before-deploy/efoo.jp-<日時>` に写す。書き換えを始めてから、書き換えた内容が差分のとおりであることと、トップページが 200 を返すことを確かめ終えるまでの間に終わると（書き換えや読み戻しの失敗、内容の不一致、`.htaccess` の誤りによる 500 など、中断を含む）、サーバーの写しに戻して終了コード 1 で終わる。写しに戻せなかったときは、そのことと、手で戻すコマンドを表示する
-- 保存期間を外すときは `--remove` を付ける。区間の中身を空にし（`# BEGIN efoo cache` と `# END efoo cache` の行だけが残る）、区間の外は変えない。`--remove` を付けない反映では、`server/htaccess/efoo-cache.conf` が空、または空行とコメント行だけのとき、本番に接続する前に誤りとして止める。設定ファイルを空にしても保存期間は外れない。外したあと設定を戻すときは、`--remove` を付けずに `--yes` で反映する。書き換える前の写しに `.htaccess` 全体を戻す方法もあるが、写した後に WordPress が `# BEGIN WordPress` の区間を書き換えていれば、その変更も戻ってしまう
+- 保存期間を外すときは `--remove` を付ける。区間の中身を空にし（`# BEGIN efoo cache` と `# END efoo cache` の行だけが残る）、区間の外は変えない。`--remove` を付けない反映では、`origin/main` の `server/htaccess/efoo-cache.conf` が空、または空行とコメント行だけのとき、本番に接続する前に誤りとして止める。設定ファイルを空にしても保存期間は外れない。外したあと設定を戻すときは、`--remove` を付けずに `--yes` で反映する。書き換える前の写しに `.htaccess` 全体を戻す方法もあるが、写した後に WordPress が `# BEGIN WordPress` の区間を書き換えていれば、その変更も戻ってしまう
 - `--yes` は、書き換えた後に nginx のキャッシュを消し、トップページ（`Cache-Control` なし）、トップページの HTML から拾った URL の `Cache-Control` を確かめる。対象は、テーマ efoo-2026 の `assets/css/main.css` と `assets/js/main.js` の `?ver=` 付きの URL（1 年と `immutable`）、同じ `main.css` の `?ver=` 無しの URL（なし）、PR 動画の mp4（30 日）、テーマのフォント（`wp_head` の preload に出る `assets/fonts/` の woff2。1 年）、テーマの画像とアップロードした画像（30 日）である。どれかの URL がトップページの HTML に無いときも、確かめられなかったものとして列挙する。満たさないものがあれば列挙し、終了コード 1 で終わる。区間に差分が無いときは書き換えず、nginx のキャッシュの消去と確認だけを行う。`--remove` のときは、同じ URL のどれにも `Cache-Control` が無いことを確かめる
 
 ## テーマ
