@@ -93,7 +93,7 @@ bash scripts/install-wp-cli.sh   # サーバーの ~/bin/wp に wp-cli を導入
 
 1. `pnpm env:pull --fresh` で本番の最新状態をローカルに取り込み、ローカルで変更して表示を確かめる。
 2. `pnpm backup` で本番のバックアップを取る（手順 1 で取得していれば不要）。
-3. 本番を変更する。プラグインやテーマの更新は `php ~/bin/wp --path=... plugin update <name>` のように wp-cli で行う。`wp-content/mu-plugins/` の変更は `bash scripts/deploy-mu-plugins.sh --dry-run` で確かめてから `--yes` で反映する。
+3. 本番を変更する。プラグインやテーマの更新は `php ~/bin/wp --path=... plugin update <name>` のように wp-cli で行う。`wp-content/mu-plugins/` の変更は `bash scripts/deploy-mu-plugins.sh --dry-run` で確かめてから `--yes` で反映する。自作テーマ `wp-content/themes/efoo-2026/` の変更は、main へマージしてから `bash scripts/deploy-theme.sh --dry-run` で確かめ、`--yes` で反映する（使い方はテーマの README の「本番への反映」）。
 4. `pnpm check` で点検し、https://efoo.jp/ の表示を確かめる。
 5. 公式配布物と異なるファイルを意図して作ったときは、`scripts/known-modified.tsv` に登録する。
 
