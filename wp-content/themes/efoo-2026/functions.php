@@ -172,9 +172,10 @@ add_action( 'wp_enqueue_scripts', function () {
 	 */
 	$css_ver = (string) filemtime( get_theme_file_path( 'assets/css/main.css' ) );
 	$js_ver  = (string) filemtime( get_theme_file_path( 'assets/js/main.js' ) );
+	// Space Grotesk はテーマから配信する（main.css の @font-face）。ここでは Noto Sans JP と JetBrains Mono だけを読む
 	wp_enqueue_style(
 		'efoo-fonts',
-		'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap',
+		'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap',
 		array(),
 		null
 	);
@@ -190,5 +191,32 @@ add_action( 'wp_enqueue_scripts', function () {
 		)
 	);
 } );
+
+/*
+ * Google Fonts の CSS とフォントのファイルは別のホストから来るため、接続を先に張っておく。
+ * フォントのファイルは CORS で取得されるので、fonts.gstatic.com には crossorigin を付ける。
+ */
+add_filter( 'wp_resource_hints', function ( $urls, $relation_type ) {
+	if ( 'preconnect' === $relation_type ) {
+		$urls[] = 'https://fonts.googleapis.com';
+		$urls[] = array(
+			'href'        => 'https://fonts.gstatic.com',
+			'crossorigin' => 'anonymous',
+		);
+	}
+	return $urls;
+}, 10, 2 );
+
+/*
+ * Space Grotesk のファイルを、スタイルシート（wp_head の優先度 8）より前に取りに行かせる。
+ * main.css を読み終えてから取りに行くと、トップのヒーローの英字が後から差し替わって横にずれる。
+ * URL は main.css の @font-face の url() と同じにする（違うと 2 回取得する）。
+ */
+add_action( 'wp_head', function () {
+	printf(
+		'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+		esc_url( get_theme_file_uri( 'assets/fonts/space-grotesk-v22-latin.woff2' ) )
+	);
+}, 3 );
 
 require_once get_theme_file_path( 'inc/ogp.php' );

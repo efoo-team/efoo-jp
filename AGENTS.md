@@ -2,7 +2,7 @@
 
 efoo株式会社のコーポレートサイト https://efoo.jp/ を運用・改善するリポジトリ。サイトは本番サーバー上の WordPress で、ローカルでは wp-env で本番と同じ内容を再現して確かめる。
 
-リポジトリで管理するのは、自作のコード（`wp-content/mu-plugins/` と自作テーマ `wp-content/themes/efoo-2026/`）、ローカル環境の設定（`.wp-env.json`）、本番の取得・点検のスクリプトである。配布物のテーマ・プラグイン、ページの内容、アップロード画像は本番が正本であり、Git では管理しない。ローカルへは本番のバックアップから取り込む。
+リポジトリで管理するのは、自作のコード（`wp-content/mu-plugins/` と自作テーマ `wp-content/themes/efoo-2026/`）、本番の `.htaccess` に書き足す設定（`server/htaccess/`）、ローカル環境の設定（`.wp-env.json`）、本番の取得・点検・反映のスクリプトである。配布物のテーマ・プラグイン、ページの内容、アップロード画像は本番が正本であり、Git では管理しない。ローカルへは本番のバックアップから取り込む。
 
 ## ローカル環境
 
@@ -93,11 +93,39 @@ bash scripts/install-wp-cli.sh   # サーバーの ~/bin/wp に wp-cli を導入
 
 1. `pnpm env:pull --fresh` で本番の最新状態をローカルに取り込み、ローカルで変更して表示を確かめる。
 2. `pnpm backup` で本番のバックアップを取る（手順 1 で取得していれば不要）。
-3. 本番を変更する。プラグインやテーマの更新は `php ~/bin/wp --path=... plugin update <name>` のように wp-cli で行う。`wp-content/mu-plugins/` の変更は `bash scripts/deploy-mu-plugins.sh --dry-run` で確かめてから `--yes` で反映する。自作テーマ `wp-content/themes/efoo-2026/` の変更は、main へマージしてから `bash scripts/deploy-theme.sh --dry-run` で確かめ、`--yes` で反映する（使い方はテーマの README の「本番への反映」）。
+3. 本番を変更する。プラグインやテーマの更新は `php ~/bin/wp --path=... plugin update <name>` のように wp-cli で行う。`wp-content/mu-plugins/` の変更は `bash scripts/deploy-mu-plugins.sh --dry-run` で確かめてから `--yes` で反映する。自作テーマ `wp-content/themes/efoo-2026/` の変更は、main へマージしてから `bash scripts/deploy-theme.sh --dry-run` で確かめ、`--yes` で反映する（使い方はテーマの README の「本番への反映」）。静的ファイルの保存期間（`server/htaccess/efoo-cache.conf`）の変更は、`bash scripts/deploy-htaccess.sh --dry-run` で確かめてから `--yes` で反映する（下の「静的ファイルの保存期間」）。
 4. `pnpm check` で点検し、https://efoo.jp/ の表示を確かめる。
 5. 公式配布物と異なるファイルを意図して作ったときは、`scripts/known-modified.tsv` に登録する。
 
 本番への書き込み（更新・削除・設定変更・ファイル配置）は、ユーザーの明示指示があるときだけ行う。
+
+## 静的ファイルの保存期間
+
+本番の docroot の `.htaccess` の `# BEGIN efoo cache`〜`# END efoo cache` の区間が、CSS・JS・画像・動画・フォントの応答に `Cache-Control: max-age` と `Expires` を付け、ブラウザに保存させる期間を決める。区間の中身の正本は `server/htaccess/efoo-cache.conf` であり、本番の `.htaccess` を直接編集しても、次の反映で上書きされる。
+
+| ファイル | 保存期間 |
+| --- | --- |
+| URL に `?ver=` が付いた CSS・JS | 1 年（`immutable` も付ける） |
+| URL に `?ver=` が付かない CSS・JS | 付けない |
+| 画像（テーマの `assets/img/` とアップロードした画像）・動画 | 30 日 |
+| フォント | 1 年 |
+| HTML | 付けない |
+
+前段の nginx も、応答の `max-age` の間ファイルを保持して返す。このため、同じファイル名のまま中身を差し替えた画像や動画は、nginx のキャッシュを消すまで本番でも古い内容が返り、消したあとも、すでに取得したブラウザには最大 30 日古い内容が残る。サーバーから消したファイルも、nginx のキャッシュを消すまで返ることがある。nginx のキャッシュは、サーバーで `curl 'http://127.0.0.1:9080/clearcache?cwd=/home/r0884593/public_html/efoo.jp'` を実行して消す（`scripts/deploy-theme.sh --yes` と `scripts/deploy-htaccess.sh --yes` は、これを実行する）。写真や動画（テーマの `assets/img/` の画像を含む）を差し替えるときは、ファイル名を変える。CSS・JS は `?ver=` が変われば別の URL になるため、この扱いは要らない。
+
+区間の反映は `scripts/deploy-htaccess.sh` で行う。
+
+```sh
+bash scripts/deploy-htaccess.sh --dry-run            # 本番の .htaccess と、書き換えた後との差分を表示するだけ
+bash scripts/deploy-htaccess.sh --yes                # 書き換え、nginx のキャッシュを消して、応答ヘッダーを確かめる
+bash scripts/deploy-htaccess.sh --dry-run --remove   # 区間の中身を空にした場合の差分を表示するだけ
+bash scripts/deploy-htaccess.sh --yes --remove       # 区間の中身を空にして保存期間を外し、応答ヘッダーに保存期間が無いことを確かめる
+```
+
+- 書き換えは、サーバーの wp-cli から WordPress の `insert_with_markers()` で行う。区間がまだ無ければ `.htaccess` の末尾（`# END WordPress` の後）に足し、区間の外は変えない。WordPress がパーマリンクの保存で書き換えるのは `# BEGIN WordPress` の区間だけなので、この区間は残る
+- `--yes` は、書き換える前の `.htaccess` を、サーバーの `~/htaccess-before-deploy/efoo.jp-<日時>` と手元の `.local/htaccess-before-deploy/efoo.jp-<日時>` に写す。書き換えを始めてから、書き換えた内容が差分のとおりであることと、トップページが 200 を返すことを確かめ終えるまでの間に終わると（書き換えや読み戻しの失敗、内容の不一致、`.htaccess` の誤りによる 500 など、中断を含む）、サーバーの写しに戻して終了コード 1 で終わる。写しに戻せなかったときは、そのことと、手で戻すコマンドを表示する
+- 保存期間を外すときは `--remove` を付ける。区間の中身を空にし（`# BEGIN efoo cache` と `# END efoo cache` の行だけが残る）、区間の外は変えない。`--remove` を付けない反映では、`server/htaccess/efoo-cache.conf` が空、または空行とコメント行だけのとき、本番に接続する前に誤りとして止める。設定ファイルを空にしても保存期間は外れない。外したあと設定を戻すときは、`--remove` を付けずに `--yes` で反映する。書き換える前の写しに `.htaccess` 全体を戻す方法もあるが、写した後に WordPress が `# BEGIN WordPress` の区間を書き換えていれば、その変更も戻ってしまう
+- `--yes` は、書き換えた後に nginx のキャッシュを消し、トップページ（`Cache-Control` なし）、トップページが読み込む `?ver=` 付きの CSS と JS（1 年と `immutable`）、同じ CSS の `?ver=` 無しの URL（なし）、テーマの画像とアップロードした画像（30 日）、WordPress 本体のフォント `wp-includes/fonts/dashicons.woff2`（1 年）の `Cache-Control` を確かめる。満たさないものがあれば列挙し、終了コード 1 で終わる。区間に差分が無いときは書き換えず、nginx のキャッシュの消去と確認だけを行う。`--remove` のときは、同じ URL のどれにも `Cache-Control` が無いことを確かめる
 
 ## テーマ
 
