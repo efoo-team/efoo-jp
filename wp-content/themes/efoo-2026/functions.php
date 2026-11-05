@@ -218,3 +218,5 @@ add_action( 'wp_head', function () {
 		esc_url( get_theme_file_uri( 'assets/fonts/space-grotesk-v22-latin.woff2' ) )
 	);
 }, 3 );
+
+require_once get_theme_file_path( 'inc/ogp.php' );
