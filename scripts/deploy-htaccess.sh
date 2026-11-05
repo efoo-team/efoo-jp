@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # 本番 docroot の .htaccess の「# BEGIN efoo cache」〜「# END efoo cache」を、server/htaccess/efoo-cache.conf の内容にする。
 # 区間がまだ無ければ .htaccess の末尾に足す。区間の外（# BEGIN WordPress の区間など）は変えない。
-#   bash scripts/deploy-htaccess.sh --dry-run   書き換えた後との差分を表示するだけ（本番の .htaccess には書かない）
-#   bash scripts/deploy-htaccess.sh --yes       書き換え、nginx のキャッシュを消して、ファイルの種類ごとの応答ヘッダーを確かめる
+#   bash scripts/deploy-htaccess.sh --dry-run            書き換えた後との差分を表示するだけ（本番の .htaccess には書かない）
+#   bash scripts/deploy-htaccess.sh --yes                書き換え、nginx のキャッシュを消して、ファイルの種類ごとの応答ヘッダーを確かめる
+#   bash scripts/deploy-htaccess.sh --dry-run --remove   区間の中身を空にした場合の差分を表示するだけ
+#   bash scripts/deploy-htaccess.sh --yes --remove       区間の中身を空にして保存期間を外し、応答ヘッダーに保存期間が無いことを確かめる
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -16,6 +18,8 @@ YEAR_IMMUTABLE='max-age=31536000, immutable'
 YEAR='max-age=31536000'
 MONTH='max-age=2592000'
 
+# 1 なら区間の中身を空にする（--remove）。
+REMOVE=0
 # 作業用の一時ディレクトリ。
 TMP=
 # 書き換える前に写した .htaccess のサーバー上の場所と手元の場所。ROLLBACK_FROM が空でない間に終わると、on_exit がそこから戻す。
@@ -24,8 +28,10 @@ LOCAL_SAVED=
 
 # サーバーの wp-cli で scripts/htaccess-block.php を実行する。$1 は render か write。
 run_helper() {
-	local encoded
-	encoded="$(base64 <"$CONF" | tr -d '\n')"
+	local encoded=
+	if [ "$REMOVE" = 0 ]; then
+		encoded="$(base64 <"$CONF" | tr -d '\n')"
+	fi
 	remote_wp eval-file - "$1" "$MARKER" "$encoded" <"$HELPER"
 }
 
@@ -55,8 +61,12 @@ first_url() {
 
 # 書き換えた後の本番を確かめる。本番へは書き込まない。満たさないものを列挙し、1 つでもあれば 1 を返す。
 # 種類ごとの代表の URL は、そのときのトップの HTML から拾う。フォントはトップから読み込まないため、WordPress 本体に入っている固定の URL を使う。
+# --remove のときは、どの URL にも Cache-Control が無いことを確かめる。
 verify() {
 	local ng=0 html css js theme_img upload_img name url
+	if [ "$REMOVE" = 1 ]; then
+		local YEAR_IMMUTABLE='' YEAR='' MONTH=''
+	fi
 	html="$(mktemp)"
 	curl -s -m 20 -o "$html" "$SITE_URL/" || true
 	expect_cache_control "$SITE_URL/" '' || ng=1
@@ -122,7 +132,15 @@ main() {
 	--dry-run) mode=dry ;;
 	--yes) mode=yes ;;
 	*)
-		echo "--dry-run か --yes を指定する" >&2
+		echo "--dry-run か --yes を指定する（区間の中身を空にするときは、続けて --remove）" >&2
+		exit 1
+		;;
+	esac
+	case "${2:-}" in
+	'') ;;
+	--remove) REMOVE=1 ;;
+	*)
+		echo "2 つめの引数は --remove だけを受け付ける: $2" >&2
 		exit 1
 		;;
 	esac

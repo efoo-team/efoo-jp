@@ -5,6 +5,7 @@
  *   render  書き換えた後の .htaccess の全文を出力する。サーバーの一時ファイルの写しで書き換え、docroot の .htaccess には書かない
  *   write   docroot の .htaccess を書き換える
  * 区間がまだ無ければ、insert_with_markers() は .htaccess の末尾に足す。
+ * 中身の base64 が空文字列なら、区間の中身を空にする（マーカー行だけを残す）。区間がまだ無ければ何もしない。
  *
  * @package efoo-jp
  */
@@ -16,11 +17,16 @@ if ( count( $args ) !== 3 ) {
 }
 list( $efoo_mode, $efoo_marker, $efoo_encoded ) = $args;
 
-$efoo_content = base64_decode( $efoo_encoded, true );
-if ( false === $efoo_content || '' === trim( $efoo_content ) ) {
-	WP_CLI::error( '区間の中身を読めない' );
+if ( '' === $efoo_encoded ) {
+	$efoo_lines = array();
+} else {
+	// 空の設定ファイルを渡す誤りは、空にする操作と区別して止める。
+	$efoo_content = base64_decode( $efoo_encoded, true );
+	if ( false === $efoo_content || '' === trim( $efoo_content ) ) {
+		WP_CLI::error( '区間の中身を読めない' );
+	}
+	$efoo_lines = explode( "\n", rtrim( str_replace( "\r\n", "\n", $efoo_content ), "\n" ) );
 }
-$efoo_lines = explode( "\n", rtrim( str_replace( "\r\n", "\n", $efoo_content ), "\n" ) );
 
 // insert_with_markers() は区間の先頭に「WordPress フィルターによってのみ修正が可能」という説明を入れる。
 // この区間の説明は中身のコメントに書いてあるため、この区間に限って入れない。
@@ -38,7 +44,14 @@ if ( ! is_file( $efoo_target ) ) {
 	WP_CLI::error( "{$efoo_target} が無い" );
 }
 
-if ( 'render' === $efoo_mode ) {
+// 区間が無いのに空にするときは、マーカー行だけの区間を足さずに、そのままにする。
+$efoo_noop = array() === $efoo_lines && ! str_contains( (string) file_get_contents( $efoo_target ), "# BEGIN {$efoo_marker}" );
+
+if ( 'render' === $efoo_mode && $efoo_noop ) {
+	readfile( $efoo_target );
+} elseif ( 'write' === $efoo_mode && $efoo_noop ) {
+	WP_CLI::log( '区間が無いため、何もしない' );
+} elseif ( 'render' === $efoo_mode ) {
 	$efoo_copy = tempnam( sys_get_temp_dir(), 'efoo-htaccess-' );
 	if ( false === $efoo_copy || ! copy( $efoo_target, $efoo_copy ) ) {
 		WP_CLI::error( '一時ファイルへ写せない' );
