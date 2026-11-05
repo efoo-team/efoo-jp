@@ -84,7 +84,7 @@ a:hover { color: var(--ink); }
 .cv-chip { position: absolute; left: 38px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; background: rgba(10, 20, 14, 0.72); color: #D7F5E2; font-size: 9px; letter-spacing: 0.12em; padding: 5px 10px; }
 
 /* サービススライダー */
-.svc-track { display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x proximity; padding: 40px 4px 52px; margin: -36px -4px -32px; scrollbar-width: none; cursor: grab; }
+.svc-track { display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x proximity; padding: 40px 4px 52px; margin: -36px -4px -32px; scrollbar-width: none; }
 .svc-track::-webkit-scrollbar { display: none; }
 .nav-btn { transition: border-color .25s ease, color .25s ease, transform .25s ease; }
 .nav-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
