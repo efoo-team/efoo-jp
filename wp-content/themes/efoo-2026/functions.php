@@ -19,7 +19,8 @@ add_action( 'after_setup_theme', function () {
 } );
 
 /**
- * お知らせ一覧の名前。一覧の画面の見出し（archive.php）とブラウザのタブの名前で同じ語を使う。
+ * お知らせ一覧の名前。一覧の画面の見出し（archive.php）、トップのお知らせの見出し
+ * （front-page.php）、ブラウザのタブの名前で同じ語を使う。
  */
 function efoo_news_index_title(): string {
 	return 'お知らせ・掲載実績';
