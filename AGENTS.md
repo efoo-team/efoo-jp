@@ -107,7 +107,7 @@ bash scripts/install-wp-cli.sh   # サーバーの ~/bin/wp に wp-cli を導入
 | 自作テーマ `wp-content/themes/efoo-2026/` | `scripts/deploy-theme.sh` | テーマの README の「本番への反映」 |
 | 静的ファイルの保存期間（`server/htaccess/efoo-cache.conf`） | `scripts/deploy-htaccess.sh` | 下の「静的ファイルの保存期間」 |
 
-3 つとも、送る内容は作業ツリーではなく、`git fetch` した `origin/main` から取り出す（`scripts/lib.sh` の `extract_deploy_ref`）。どのワークツリーで、どのブランチを開いて実行しても、本番へ送る内容は `origin/main` と同じになる。
+3 つとも、送る内容は作業ツリーではなく、`git fetch` した `origin/main` から取り出す（`scripts/lib.sh` の `extract_deploy_ref`）。どのワークツリーで、どのブランチを開いて実行しても、本番へ送る内容は `origin/main` と同じになる。ただし `deploy-htaccess.sh --remove` は区間の中身を空にするだけで設定ファイルを使わないため、fetch も取り出しもせず、下の表示と停止も行わない。
 
 - 実行すると、まず送るコミット（`origin/main` の先頭）を表示する。`origin` の `main` を fetch できないとき（オフラインなど）と、送るパスが `origin/main` に無いときは、何も送らずに終了コード 1 で止まる
 - 送るパスに、作業ツリーの未コミットの変更（未追跡のファイルを含む）か、開いているブランチにあって `origin/main` に無いコミットがあれば、それらが送られないことを一覧で表示する。止まりはしない。作業ツリーが `origin/main` より古いだけのときは何も表示せず、送るのは `origin/main` である
