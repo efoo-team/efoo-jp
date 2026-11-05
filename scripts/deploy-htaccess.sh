@@ -27,12 +27,19 @@ ROLLBACK_FROM=
 LOCAL_SAVED=
 
 # サーバーの wp-cli で scripts/htaccess-block.php を実行する。$1 は render か write。
+# 区間を設定の内容にするか（set）、中身を空にするか（remove）は、--remove の有無だけで決め、引数で明示して渡す。
 run_helper() {
-	local encoded=
-	if [ "$REMOVE" = 0 ]; then
-		encoded="$(base64 <"$CONF" | tr -d '\n')"
+	if [ "$REMOVE" = 1 ]; then
+		remote_wp eval-file - "$1" remove "$MARKER" <"$HELPER"
+	else
+		remote_wp eval-file - "$1" set "$MARKER" "$(base64 <"$CONF" | tr -d '\n')" <"$HELPER"
 	fi
-	remote_wp eval-file - "$1" "$MARKER" "$encoded" <"$HELPER"
+}
+
+# 設定ファイルに、空行とコメント行のほかに 1 行以上あるかを確かめる。無ければ（空・空白だけ・コメントだけ・ファイルが無い）1 を返す。
+# そのまま書くと保存期間が外れるが、外すのは --remove で明示したときだけにする。
+conf_has_directive() {
+	grep -qvE '^[[:space:]]*(#|$)' "$CONF" 2>/dev/null
 }
 
 # $1 の URL の HTTP ステータスを出力する。
@@ -144,6 +151,11 @@ main() {
 		exit 1
 		;;
 	esac
+
+	if [ "$REMOVE" = 0 ] && ! conf_has_directive; then
+		echo "$CONF に、空行とコメント行のほかの行が無い（または読めない）。保存期間を外すときは --remove を付ける" >&2
+		exit 1
+	fi
 
 	TMP="$(mktemp -d)"
 	trap on_exit EXIT
