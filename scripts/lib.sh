@@ -59,3 +59,17 @@ remote_check_perms() {
 	fi
 	echo "権限: $1 配下はすべてディレクトリ 755・ファイル 644"
 }
+
+# 本番の nginx のキャッシュを消す。URL は $1 で差し替えられ、省略時は本番の消去 URL である。
+# 応答が 200 でなければ（curl 自体の失敗で 000 になる場合を含む）、手で消す方法を出して 1 を返す。
+clear_cache() {
+	local url="${1:-http://127.0.0.1:9080/clearcache?cwd=$DOCROOT}" code
+	code="$(remote "curl -s -o /dev/null -w '%{http_code}' -m 20 '$url'")" || code=000
+	[ -n "$code" ] || code=000
+	echo "nginx のキャッシュの消去 -> $code"
+	if [ "$code" != 200 ]; then
+		echo "キャッシュを消せなかった。古い内容が残るため、サーバーに ssh で入り、次を実行して手で消す:"
+		echo "  curl '$url'"
+		return 1
+	fi
+}
