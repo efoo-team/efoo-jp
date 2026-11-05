@@ -38,10 +38,12 @@ function efoo_ogp_default_image(): array {
 }
 
 /**
- * 説明文に使える文字列へ整える。HTML タグを除き、文字参照を戻し、空白を詰め、
- * 全角 120 字を超えるときは 120 字で切って「…」を付ける。
+ * 説明文に使える文字列へ整える。ショートコードと抜粋に向かないブロックを除き、HTML タグを除き、
+ * 文字参照を戻し、空白を詰め、全角 120 字を超えるときは 120 字で切って「…」を付ける。
+ * 抜粋・本文・タイトルのどれから作るときも、この 1 つの処理を通す。
  */
 function efoo_ogp_clean_text( string $text, int $max = 120 ): string {
+	$text = excerpt_remove_blocks( strip_shortcodes( $text ) );
 	$text = html_entity_decode( wp_strip_all_tags( $text ), ENT_QUOTES, 'UTF-8' );
 	$text = trim( (string) preg_replace( '/[\s\p{Z}]+/u', ' ', $text ) );
 	if ( mb_strlen( $text ) > $max ) {
@@ -51,18 +53,15 @@ function efoo_ogp_clean_text( string $text, int $max = 120 ): string {
 }
 
 /**
- * 記事・固定ページの説明文。抜粋があれば抜粋、無ければ本文の先頭。ショートコードと、
- * 抜粋に向かないブロックは本文から除く。パスワード保護の記事は本文を出さない。
+ * 記事・固定ページの説明文。抜粋があれば抜粋、無ければ本文の先頭を、efoo_ogp_clean_text() で整える。
+ * パスワード保護の記事は本文を出さない。
  * 抜粋は get_the_excerpt() を通さない（英語の語数で切られ、日本語では全文が残るため）。
  */
 function efoo_ogp_post_description( WP_Post $post ): string {
 	if ( post_password_required( $post ) ) {
 		return '';
 	}
-	$text = $post->post_excerpt;
-	if ( '' === trim( $text ) ) {
-		$text = excerpt_remove_blocks( strip_shortcodes( $post->post_content ) );
-	}
+	$text = '' !== trim( $post->post_excerpt ) ? $post->post_excerpt : $post->post_content;
 	return efoo_ogp_clean_text( $text );
 }
 
