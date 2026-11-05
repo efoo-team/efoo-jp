@@ -126,3 +126,11 @@ Inspiro 2.x への更新では、見出しのフォント（Montserrat から On
 フォームの送信後に表示する「Submitted successfully!」「Submission failed!」は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-ja.php` が gettext フィルター（テキストドメイン `wpzoom-forms`）で日本語にする。プラグイン本体は変更しないので、wpzoom-forms を更新しても文言は保たれる。
 
 送信ボタンの「送信する」はプラグインのコードではなく、フォームの投稿（ID 239、post_type `wpzf-form`）の本文に保存された `wpzoom-forms/submit-field` ブロックの値である。変えるにはフォーム編集画面の送信ボタンの「Name」欄で変える。
+
+## 問い合わせメールの件名・本文・差出人
+
+問い合わせフォームの通知メール（chefree@efoo.jp 宛て）は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-mail.php` が、公式サイトからの問い合わせだと分かる形にする。対象はフォーム送信の処理（`admin_post_wpzf_submit`・`admin_post_nopriv_wpzf_submit`）の最中に送るメールだけで、パスワード再設定などのメールには影響しない。プラグイン本体は変更しないので、wpzoom-forms を更新しても保たれる。
+
+- 件名：送信者が入力した件名の先頭に `【efoo.jp お問い合わせ】` を付け、プラグインが末尾に足す「 -- サイト名」は外す。
+- 本文：冒頭に「efoo.jp のお問い合わせフォーム（`/contact-us/` の URL）から送信されました。」の 1 行を入れる。
+- 差出人：From は `efoo.jp お問い合わせフォーム <chefree@efoo.jp>`、Reply-To は送信者のアドレスである。エンベロープ送信者（Return-Path）も From と同じ chefree@efoo.jp にし、efoo.jp の SPF と揃える。
