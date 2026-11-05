@@ -35,7 +35,6 @@ while ( have_posts() ) {
 			the_post_thumbnail(
 				'large',
 				array(
-					'alt'     => '',
 					'sizes'   => '(max-width: 944px) 100vw, 880px',
 					'loading' => 'eager',
 				)
