@@ -4,7 +4,8 @@
  * Description: WPZOOM Forms の問い合わせ通知メールの件名・本文・差出人を、公式サイトからの問い合わせだと分かる形にする。プラグイン本体は変更しない。
  */
 
-// 通知メールは wpzoom-forms.php の action_form_post() が wp_mail() で送る。
+// 通知メールは、送信処理（admin_post_wpzf_submit・admin_post_nopriv_wpzf_submit）の
+// WPZOOM_Forms_Submission_Handler::handle() から呼ばれる wpzoom-forms.php の action_form_post() が、wp_mail() で送る。
 // パスワード再設定など、ほかの wp_mail() に影響しないよう、この送信処理の最中だけを対象にする。
 $efoo_is_contact_mail = static function () {
 	return doing_action( 'admin_post_wpzf_submit' ) || doing_action( 'admin_post_nopriv_wpzf_submit' );
@@ -13,20 +14,27 @@ $efoo_is_contact_mail = static function () {
 // 差出人のアドレスは受信者と同じ chefree@efoo.jp にする。実在が確かで、送信失敗の通知も受け取れるため。
 $efoo_contact_from = 'efoo.jp お問い合わせフォーム <chefree@efoo.jp>';
 
+// 送信者が件名の欄に入力した値。プラグインと同じく、hidden の wpzf_subject が指す欄の値を使い、
+// その欄が無いときはフォームの投稿に保存された件名（_form_subject）を使う。
+$efoo_contact_subject = static function () {
+	$field = isset( $_REQUEST['wpzf_subject'] ) ? sanitize_text_field( $_REQUEST['wpzf_subject'] ) : '';
+	if ( '' !== $field && isset( $_REQUEST[ $field ] ) ) {
+		return sanitize_text_field( wp_unslash( $_REQUEST[ $field ] ) );
+	}
+
+	$form_id = isset( $_REQUEST['form_id'] ) ? (int) $_REQUEST['form_id'] : 0;
+	return sanitize_text_field( (string) get_post_meta( $form_id, '_form_subject', true ) );
+};
+
 add_filter(
 	'wp_mail',
-	static function ( $args ) use ( $efoo_is_contact_mail, $efoo_contact_from ) {
+	static function ( $args ) use ( $efoo_is_contact_mail, $efoo_contact_from, $efoo_contact_subject ) {
 		if ( ! $efoo_is_contact_mail() ) {
 			return $args;
 		}
 
-		// 件名：action_form_post() と同じ式で組み立てた末尾の「 -- サイト名」だけを外し、目印を先頭に付ける。
-		$subject = (string) $args['subject'];
-		$suffix  = sprintf( __( ' -- %s', 'wpzoom-forms' ), sanitize_text_field( get_bloginfo( 'name' ) ) );
-		if ( '' !== $suffix && substr( $subject, -strlen( $suffix ) ) === $suffix ) {
-			$subject = substr( $subject, 0, -strlen( $suffix ) );
-		}
-		$args['subject'] = '【efoo.jp お問い合わせ】' . $subject;
+		// 件名：プラグインが組み立てた件名（末尾に「 - サイト名」が付く）は使わず、入力された件名から組み立て直す。
+		$args['subject'] = '【efoo.jp お問い合わせ】' . $efoo_contact_subject();
 
 		// 本文：HTML の <body> の直後に、どこから届いたかを 1 行入れる。
 		$notice = '<p>efoo.jp のお問い合わせフォーム（' . esc_html( home_url( '/contact-us/' ) ) . '）から送信されました。</p>';

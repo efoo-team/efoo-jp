@@ -153,16 +153,39 @@ Inspiro 2.x への更新では、見出しのフォント（Montserrat から On
 
 本番の wpzoom-portfolio 1.4.10 には、同じ並び替えをプラグイン本体に直接書き込んだ改修も残っている（差分は `patches/wpzoom-portfolio-1.4.10.diff`）。mu-plugin が同じ順を決めるため、wpzoom-portfolio は公式の版へ更新してよい。更新したら `scripts/known-modified.tsv` から wpzoom-portfolio の行を消し、`patches/` も消す。
 
-## 問い合わせフォームの文言
+## 問い合わせフォーム
 
-フォームの送信後に表示する「Submitted successfully!」「Submission failed!」は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-ja.php` が gettext フィルター（テキストドメイン `wpzoom-forms`）で日本語にする。プラグイン本体は変更しないので、wpzoom-forms を更新しても文言は保たれる。
+お問い合わせページ（固定ページ `contact-us`、ID 248）は、wpzoom-forms のフォーム（ID 239、post_type `wpzf-form`）を埋め込んでいる。フォーム 239 は、wpzoom-forms 2.x でも旧形式（本文のブロックで項目を組んだフォーム。投稿メタ `_wpzf_schema` が無い）のままである。旧形式のフォームは、表示を `form_block_render()`、送信の処理を `action_form_post()`（2.x の送信処理 `WPZOOM_Forms_Submission_Handler::handle()` から呼ばれる）が行う。下の 2 つの mu-plugin と、テーマの送信ボタンの中央寄せは、この旧形式の経路を前提にしている。
 
-送信ボタンの「送信する」はプラグインのコードではなく、フォームの投稿（ID 239、post_type `wpzf-form`）の本文に保存された `wpzoom-forms/submit-field` ブロックの値である。変えるにはフォーム編集画面の送信ボタンの「Name」欄で変える。
+### フォームを変えるとき
 
-## 問い合わせメールの件名・本文・差出人
+フォーム 239 は、管理画面のフォーム編集画面（Form Builder）で保存しない。保存すると `_wpzf_schema` が作られて新しい形式に移り、次のように変わる。開くだけなら形式は変わらない。
 
-問い合わせフォームの通知メール（chefree@efoo.jp 宛て）は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-mail.php` が、公式サイトからの問い合わせだと分かる形にする。対象はフォーム送信の処理（`admin_post_wpzf_submit`・`admin_post_nopriv_wpzf_submit`）の最中に送るメールだけで、パスワード再設定などのメールには影響しない。プラグイン本体は変更しないので、wpzoom-forms を更新しても保たれる。
+- 項目名：本文のブロックの `name` の値になり、「メールアドレス」は「Email」、「問い合わせ内容」は「Message」になる。
+- 送信ボタン：「Submit」になる（送信ボタンのブロックに `name` が無いため）。
+- 送信後の文言：「Thanks! We've received your submission.」「Sorry, something went wrong. Please try again.」になり、mu-plugin の日本語が当たらない。
 
-- 件名：送信者が入力した件名の先頭に `【efoo.jp お問い合わせ】` を付け、プラグインが末尾に足す「 -- サイト名」は外す。
+項目名や送信ボタンの「送信する」は、フォーム 239 の本文（`post_content`）に保存されたブロックの値である。変えるときは、wp-cli で本文をファイルに書き出し、ブロックの値を書き換えて、本文を更新する。項目名を変えるときは、ブロックの属性の `name`（通知メールの本文に出る項目名）と `label`、ブロックの HTML の `<label>` の文字をそろえて書き換える。送信ボタンの文字は `<input type="submit">` の `value` である。
+
+```sh
+pnpm -s wp post get 239 --field=post_content 2>/dev/null > .local/form-239.html   # 書き出す（.local/ は Git の管理外）
+pnpm -s wp post update 239 - --user=admin < .local/form-239.html                  # 書き換えた本文で更新する
+```
+
+`pnpm wp` の出力には pnpm と wp-env の表示が混ざるため、書き出しには `-s` と `2>/dev/null` を付ける。本番では、ローカルで書き換えて表示を確かめた本文を、SSH 越しにサーバーの wp-cli へ渡して更新する（`ssh -p 8022 -o IdentitiesOnly=yes r0884593@www1068.onamae.ne.jp 'php ~/bin/wp --path=/home/r0884593/public_html/efoo.jp post update 239 - --user=<管理者のユーザー名>' < .local/form-239.html`）。更新すると、フォーム 239 のリビジョンが 1 件増える。
+
+### 送信後の文言
+
+フォームの送信後に表示する「Thanks! We've received your submission!」「Submission failed!」は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-ja.php` が gettext フィルター（テキストドメイン `wpzoom-forms`）で、「お問い合わせを送信しました。」「送信できませんでした。お手数ですが、時間をおいてもう一度お試しください。」にする。フォーム 239 に投稿メタ `_form_success_message`・`_form_failure_message` が無いため、プラグインは `__()` を通した既定の文言を出し、この置き換えが当たる。置き換えはプラグインの原文と一致したときだけ当たるので、wpzoom-forms を更新したら、ローカルで送信後の文言を確かめる。
+
+### 送信ボタンの位置
+
+送信ボタンは、テーマの `wp-content/themes/efoo-2026/assets/css/main.css` の `.wpzoom-forms_form .wp-block-column:has(> input[type="submit"])` が、ボタンを置いた列の中央に置く。
+
+### 問い合わせメールの件名・本文・差出人
+
+問い合わせフォームの通知メール（chefree@efoo.jp 宛て）は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-mail.php` が、公式サイトからの問い合わせだと分かる形にする。対象はフォーム送信の処理（`admin_post_wpzf_submit`・`admin_post_nopriv_wpzf_submit`）の最中に `wp_mail()` で送るメールだけで、パスワード再設定などのメールには影響しない。
+
+- 件名：送信者が件名の欄に入力した値の先頭に `【efoo.jp お問い合わせ】` を付ける。プラグインが組み立てた件名（末尾に「 - サイト名」が付く）は使わず、送信された値から組み立て直す。件名の欄は、フォームが hidden の `wpzf_subject` で送る欄の名前で決まる。件名の欄が空なら `【efoo.jp お問い合わせ】` だけになり、件名の欄が無いフォームでは、フォームの投稿メタ `_form_subject`（フォーム 239 では「New Form Submission」）を使う。
 - 本文：冒頭に「efoo.jp のお問い合わせフォーム（`/contact-us/` の URL）から送信されました。」の 1 行を入れる。
 - 差出人：From は `efoo.jp お問い合わせフォーム <chefree@efoo.jp>`、Reply-To は送信者のアドレスである。エンベロープ送信者（Return-Path）も From と同じ chefree@efoo.jp にし、efoo.jp の SPF と揃える。
