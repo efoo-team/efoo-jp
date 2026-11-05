@@ -2,7 +2,7 @@
 # 本番 docroot の .htaccess の「# BEGIN efoo cache」〜「# END efoo cache」を、server/htaccess/efoo-cache.conf の内容にする。
 # 区間がまだ無ければ .htaccess の末尾に足す。区間の外（# BEGIN WordPress の区間など）は変えない。
 #   bash scripts/deploy-htaccess.sh --dry-run            書き換えた後との差分を表示するだけ（本番の .htaccess には書かない）
-#   bash scripts/deploy-htaccess.sh --yes                書き換え、nginx のキャッシュを消して、ファイルの種類ごとの応答ヘッダーを確かめる
+#   bash scripts/deploy-htaccess.sh --yes                書き換え、nginx のキャッシュを消して、トップが使う CSS・JS・動画・フォント・画像の応答ヘッダーを確かめる
 #   bash scripts/deploy-htaccess.sh --dry-run --remove   区間の中身を空にした場合の差分を表示するだけ
 #   bash scripts/deploy-htaccess.sh --yes --remove       区間の中身を空にして保存期間を外し、応答ヘッダーに保存期間が無いことを確かめる
 set -euo pipefail
@@ -12,6 +12,8 @@ MARKER='efoo cache'
 CONF="$REPO_ROOT/server/htaccess/efoo-cache.conf"
 HELPER="$REPO_ROOT/scripts/htaccess-block.php"
 HTACCESS="$DOCROOT/.htaccess"
+# 本番で有効な自作テーマの URL。verify はこのテーマの CSS・JS・フォントを確かめる。
+THEME_URL="$SITE_URL/wp-content/themes/efoo-2026"
 
 # server/htaccess/efoo-cache.conf の保存期間と揃える。
 YEAR_IMMUTABLE='max-age=31536000, immutable'
@@ -67,37 +69,40 @@ first_url() {
 }
 
 # 書き換えた後の本番を確かめる。本番へは書き込まない。満たさないものを列挙し、1 つでもあれば 1 を返す。
-# 種類ごとの代表の URL は、そのときのトップの HTML から拾う。フォントはトップから読み込まないため、WordPress 本体に入っている固定の URL を使う。
-# --remove のときは、どの URL にも Cache-Control が無いことを確かめる。
+# 確かめる URL は、そのときのトップの HTML から拾う。テーマの main.css と main.js（?ver= 付き）、動画（PR 動画の data-src）、
+# テーマのフォント（wp_head の preload）、テーマの画像、アップロードした画像である。どれかが HTML に無ければ、確かめられなかったものとして NG にする。
+# --remove のときは、同じ URL のどれにも Cache-Control が無いことを確かめる。
 verify() {
-	local ng=0 html css js theme_img upload_img name url
+	local ng=0 html theme_css theme_js video theme_font theme_img upload_img name url
 	if [ "$REMOVE" = 1 ]; then
 		local YEAR_IMMUTABLE='' YEAR='' MONTH=''
 	fi
 	html="$(mktemp)"
 	curl -s -m 20 -o "$html" "$SITE_URL/" || true
 	expect_cache_control "$SITE_URL/" '' || ng=1
-	css="$(first_url "$SITE_URL/[^\"' ]+\\.css\\?ver=[^\"' ]+" "$html")"
-	js="$(first_url "$SITE_URL/[^\"' ]+\\.js\\?ver=[^\"' ]+" "$html")"
+	theme_css="$(first_url "$THEME_URL/assets/css/main\\.css\\?ver=[^\"' ]+" "$html")"
+	theme_js="$(first_url "$THEME_URL/assets/js/main\\.js\\?ver=[^\"' ]+" "$html")"
+	video="$(first_url "$SITE_URL/wp-content/[^\"' ?]+\\.mp4" "$html")"
+	theme_font="$(first_url "$THEME_URL/assets/fonts/[^\"' ?]+\\.woff2" "$html")"
 	theme_img="$(first_url "$SITE_URL/wp-content/themes/[^\"' ?]+\\.(jpe?g|png|webp)" "$html")"
 	upload_img="$(first_url "$SITE_URL/wp-content/uploads/[^\"' ?]+\\.(jpe?g|png|webp)" "$html")"
 	rm -f "$html"
-	for name in css js theme_img upload_img; do
+	for name in theme_css theme_js video theme_font theme_img upload_img; do
 		if [ -z "${!name}" ]; then
 			echo "NG  トップの HTML に $name の代表になる URL が無い"
 			ng=1
 		fi
 	done
-	if [ -n "$css" ]; then
-		expect_cache_control "$css" "$YEAR_IMMUTABLE" || ng=1
+	if [ -n "$theme_css" ]; then
+		expect_cache_control "$theme_css" "$YEAR_IMMUTABLE" || ng=1
 		# 同じ CSS を ?ver= 無しで取ると、保存期間は付かない。
-		expect_cache_control "${css%%\?*}" '' || ng=1
+		expect_cache_control "${theme_css%%\?*}" '' || ng=1
 	fi
-	[ -z "$js" ] || expect_cache_control "$js" "$YEAR_IMMUTABLE" || ng=1
-	for url in "$theme_img" "$upload_img"; do
+	[ -z "$theme_js" ] || expect_cache_control "$theme_js" "$YEAR_IMMUTABLE" || ng=1
+	for url in "$video" "$theme_img" "$upload_img"; do
 		[ -z "$url" ] || expect_cache_control "$url" "$MONTH" || ng=1
 	done
-	expect_cache_control "$SITE_URL/wp-includes/fonts/dashicons.woff2" "$YEAR" || ng=1
+	[ -z "$theme_font" ] || expect_cache_control "$theme_font" "$YEAR" || ng=1
 	return "$ng"
 }
 
