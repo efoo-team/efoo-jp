@@ -248,7 +248,7 @@ get_header();
 		<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 24px">
 			<div class="sr" style="display: flex; flex-direction: column; gap: 14px">
 				<p class="en" style="margin: 0; color: var(--accent); font-size: 14px; font-weight: 500; letter-spacing: 0.3em">CONTENTS</p>
-				<h2 class="sec-title">お知らせ・掲載実績</h2>
+				<h2 class="sec-title"><?php echo esc_html( efoo_news_index_title() ); ?></h2>
 			</div>
 			<a href="<?php echo esc_url( efoo_news_index_url() ); ?>" style="margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #14201A">一覧を見る<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
 		</div>

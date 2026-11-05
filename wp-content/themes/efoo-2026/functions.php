@@ -19,6 +19,25 @@ add_action( 'after_setup_theme', function () {
 } );
 
 /**
+ * お知らせ一覧の名前。一覧の画面の見出し（archive.php）、トップのお知らせの見出し
+ * （front-page.php）、ブラウザのタブの名前で同じ語を使う。
+ */
+function efoo_news_index_title(): string {
+	return 'お知らせ・掲載実績';
+}
+
+/*
+ * お知らせ一覧（portfolio_item のアーカイブ /project/）のタブの名前。投稿タイプのラベルは
+ * wpzoom-portfolio の「Portfolio」なので、画面の見出しと同じ語に置き換える。
+ */
+add_filter( 'document_title_parts', function ( $parts ) {
+	if ( is_post_type_archive( 'portfolio_item' ) ) {
+		$parts['title'] = efoo_news_index_title();
+	}
+	return $parts;
+} );
+
+/**
  * トップのお知らせに出す投稿タイプ。お知らせ・掲載実績はすべて wpzoom-portfolio の
  * portfolio_item に入っているため、portfolio_item だけを出す（通常の投稿には同じ告知の
  * 複製があり、混ぜると同じ告知が 2 件並ぶ）。プラグインが無効で portfolio_item が
@@ -147,19 +166,24 @@ function efoo_contact_url(): string {
 }
 
 add_action( 'wp_enqueue_scripts', function () {
-	$ver = wp_get_theme()->get( 'Version' );
+	/*
+	 * CSS と JS の版（?ver=）はそれぞれのファイルの更新日時。内容を変えれば URL が変わるので、
+	 * nginx と閲覧者のブラウザに残った古いファイルを使わずに済む。
+	 */
+	$css_ver = (string) filemtime( get_theme_file_path( 'assets/css/main.css' ) );
+	$js_ver  = (string) filemtime( get_theme_file_path( 'assets/js/main.js' ) );
 	wp_enqueue_style(
 		'efoo-fonts',
 		'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap',
 		array(),
 		null
 	);
-	wp_enqueue_style( 'efoo-main', get_theme_file_uri( 'assets/css/main.css' ), array(), $ver );
+	wp_enqueue_style( 'efoo-main', get_theme_file_uri( 'assets/css/main.css' ), array(), $css_ver );
 	wp_enqueue_script(
 		'efoo-main',
 		get_theme_file_uri( 'assets/js/main.js' ),
 		array(),
-		$ver,
+		$js_ver,
 		array(
 			'in_footer' => true,
 			'strategy'  => 'defer',
