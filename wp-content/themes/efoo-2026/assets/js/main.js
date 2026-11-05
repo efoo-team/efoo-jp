@@ -7,11 +7,14 @@
 	var motionUpdates = [];
 	var updateMotion = function () { motionUpdates.forEach(function (update) { update(); }); };
 	document.addEventListener('visibilitychange', updateMotion);
-	motionPreference.addEventListener('change', function (e) {
+	var onMotionPreference = function (e) {
 		REDUCE = e.matches;
 		if (REDUCE && label) { ++typeLabelRun; label.textContent = LABEL_TEXT; }
 		updateMotion();
-	});
+		if (REDUCE && renderCompleteTerm) { renderCompleteTerm(); }
+	};
+	if (motionPreference.addEventListener) { motionPreference.addEventListener('change', onMotionPreference); }
+	else if (motionPreference.addListener) { motionPreference.addListener(onMotionPreference); }
 
 	function wait(ms) {
 		return new Promise(function (res) { setTimeout(res, ms); });
@@ -45,7 +48,7 @@
 			if (onChange) { onChange(active); }
 		};
 		var observer = new IntersectionObserver(function (entries) {
-			inView = entries[0].isIntersecting;
+			entries.forEach(function (entry) { inView = entry.isIntersecting; });
 			update();
 		});
 		observer.observe(element);
@@ -208,8 +211,8 @@
 		var PROMPT = [['➜ ', GREEN], ['~/efoo ', CYAN], ['❯ ', PURPLE]];
 		var model = [];
 
-		var renderTerm = function () {
-			termLines.innerHTML = model.map(function (line) {
+		var renderTerm = function (lines) {
+			termLines.innerHTML = (lines || model).map(function (line) {
 				return '<span class="term-line">' + line.map(function (seg) {
 					return '<span style="color:' + seg[1] + '">' + seg[0] + '</span>';
 				}).join('') + '</span>';
@@ -238,8 +241,8 @@
 			replaceLast([['✓ ', GREEN], [lbl + ' ', FG], ['(' + (ms / 1000).toFixed(1) + 's)', YELLOW]]);
 		};
 
-		if (REDUCE) {
-			model = [
+		var renderCompleteTerm = function () {
+			renderTerm([
 				PROMPT.concat([['efoo run ai-workflow --kitchen', FG]]),
 				[['✓ ', GREEN], ['analyzing ingredients ', FG], ['(0.9s)', YELLOW]],
 				[['✓ ', GREEN], ['generating prep steps ', FG], ['(1.1s)', YELLOW]],
@@ -248,9 +251,10 @@
 				[['  ↳ ', GRAY], ['42 modules', BLUE], [' · ', GRAY], ['1.2 MB', YELLOW]],
 				[['✓ ', GREEN], ['deploying to production ', FG], ['(1.3s)', YELLOW]],
 				[['● ', GREEN], ['live', GREEN], [' · production', GRAY]]
-			];
-			renderTerm();
-		}
+			]);
+			termTyped.textContent = '';
+		};
+		if (REDUCE) { renderCompleteTerm(); }
 		(async function () {
 			await termMotion.wait(600);
 			for (;;) {
@@ -286,7 +290,6 @@
 				if (video.paused) {
 					video.play().catch(function (error) {
 						if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')) { return; }
-						throw error;
 					});
 				}
 			} else { video.pause(); }
@@ -296,7 +299,7 @@
 		video.playbackRate = 0.85;
 		var videoMotion = observeMotion(video.parentElement, function (active) { videoActive = active; syncVideo(); });
 		var loadObserver = new IntersectionObserver(function (entries) {
-			videoNear = entries[0].isIntersecting;
+			entries.forEach(function (entry) { videoNear = entry.isIntersecting; });
 			syncVideo();
 		}, { rootMargin: '100px' });
 		loadObserver.observe(video);
