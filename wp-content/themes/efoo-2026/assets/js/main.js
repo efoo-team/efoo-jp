@@ -120,6 +120,34 @@
 		ptField.appendChild(frag);
 	}
 
+	// ファーストビューが一度画面から完全に出て再び入ったとき、開始時の演出を最初から再生し直す。
+	// 一部が見えたまま戻ったときは再生しない。常時動く演出（点滅・浮遊・ターミナル・動画）は対象外
+	var hero = document.getElementById('top');
+	if (hero && !REDUCE && 'IntersectionObserver' in window) {
+		var heroLeft = false;
+		var replayHero = function () {
+			if (hero.getAnimations) {
+				// fill: forwards で終了後も残る有限回の CSS アニメーションだけを対象にする。
+				// cancel すると getAnimations に出なくなるため、同じ配列を保って全件 cancel してから全件 play する
+				var anims = hero.getAnimations({ subtree: true }).filter(function (a) {
+					return window.CSSAnimation && a instanceof CSSAnimation
+						&& a.timeline === document.timeline
+						&& a.effect.getComputedTiming().iterations !== Infinity;
+				});
+				anims.forEach(function (a) { a.cancel(); });
+				anims.forEach(function (a) { a.play(); });
+			}
+			if (label) { typeLabel(); }
+		};
+		var heroObserver = new IntersectionObserver(function (entries) {
+			entries.forEach(function (e) {
+				if (!e.isIntersecting) { heroLeft = true; }
+				else if (heroLeft) { heroLeft = false; replayHero(); }
+			});
+		}, { threshold: 0 });
+		heroObserver.observe(hero);
+	}
+
 	// ターミナルのライブ実行演出（Iceberg 配色・Starship 風プロンプト）
 	var termLines = document.getElementById('term-lines');
 	var termTyped = document.getElementById('term-typed');
