@@ -25,3 +25,37 @@ remote_wp() {
 	printf -v args '%q ' "$@"
 	remote "php \$HOME/bin/wp --path=$DOCROOT $args"
 }
+
+# PHP ファイルの構文を確かめる。手元に php が無ければ、本番と同じ版のサーバーの php に標準入力で渡す（サーバーには書き込まない）。
+php_lint() {
+	local f out
+	for f in "$@"; do
+		if command -v php >/dev/null 2>&1; then
+			out="$(php -l "$f" 2>&1)" || { echo "$f: $out" >&2; return 1; }
+		else
+			out="$(remote php -l <"$f" 2>&1)" || { echo "$f: $out" >&2; return 1; }
+		fi
+	done
+}
+
+# 送る前のディレクトリの権限を、ディレクトリ 755・ファイル 644 に揃える。
+# 手元の umask（077 など）で作られた権限が rsync -p で本番へ写り、Web サーバーが読めなくなるのを防ぐ。
+normalize_perms() {
+	find "$1" -type d -exec chmod 755 {} +
+	find "$1" -type f -exec chmod 644 {} +
+}
+
+# 本番のディレクトリ配下で、ディレクトリ 755・ファイル 644 でないものを列挙する。1 件でもあれば、または調べられなければ 1 を返す。
+remote_check_perms() {
+	local bad
+	bad="$(remote "find $1 \\( -type d ! -perm 755 \\) -o \\( -type f ! -perm 644 \\)")" || {
+		echo "権限を調べられない: $1"
+		return 1
+	}
+	if [ -n "$bad" ]; then
+		echo "ディレクトリ 755・ファイル 644 でないもの:"
+		printf '%s\n' "$bad" | sed 's/^/  /'
+		return 1
+	fi
+	echo "権限: $1 配下はすべてディレクトリ 755・ファイル 644"
+}

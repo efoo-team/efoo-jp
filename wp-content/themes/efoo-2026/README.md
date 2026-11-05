@@ -38,15 +38,29 @@ efoo株式会社のコーポレートサイトの自作テーマ。デザイン�
 
 ## ローカルでの確認
 
-`.wp-env.json` がこのテーマを wp-env にマウントしている。初回・設定変更後は wp-env の再起動が要る。
+`.wp-env.json` がこのテーマを wp-env にマウントしている。初回・設定変更後は wp-env の再起動が要る。`pnpm env:pull` で取り込んだ本番の DB では、このテーマが有効なので、そのまま表示を確かめられる。
 
 ```sh
 pnpm env:start
-pnpm wp theme activate efoo-2026
 ```
 
-戻すときは `pnpm wp theme activate inspiro`。
+Inspiro の表示と見比べるときは `pnpm wp theme activate inspiro`、このテーマへ戻すときは `pnpm wp theme activate efoo-2026`。ローカルの DB は `pnpm env:pull` で本番の状態に戻る。
 
 ## 本番への反映
 
-このテーマの配置と有効化は本番への書き込みのため、ユーザーの明示指示があるときだけ行う。配置は docroot の `wp-content/themes/efoo-2026` へのアップロード、有効化は `php ~/bin/wp --path=... theme activate efoo-2026`。有効化すると、サイト全体の表示が Inspiro からこのテーマに切り替わる。
+このテーマの配置は本番への書き込みのため、ユーザーの明示指示があるときだけ行う。
+
+配置は `scripts/deploy-theme.sh` で行う。変更を main へマージしてから、次の順に実行する。
+
+```sh
+bash scripts/deploy-theme.sh --dry-run   # 送るコミットと、本番との差分を表示するだけ
+bash scripts/deploy-theme.sh --yes       # 本番へ送り、nginx のキャッシュを消して、本番を確かめる
+```
+
+- 送るのは作業ツリーではなく、`git fetch` した `origin/main` のテーマである。本番のテーマは main と一致させる。作業ツリーの未コミットの変更や、main 以外のブランチは送られない
+- 送る前に、ディレクトリ 755・ファイル 644 に揃え、その権限を本番の既存ファイルにも写す。手元の umask で権限が狭いまま本番へ写ると、CSS・JS・画像が 403 になるためである。あわせて全 PHP ファイルの構文を確かめる（手元に php が無ければ本番サーバーの php を使う）
+- `origin/main` に無いファイルは本番から消す。`--dry-run` の出力で `*deleting` の行がそれにあたる
+- 差分は内容の checksum と権限で判定する。`--dry-run` の出力で `>f` は内容の差、`p` は権限の差である。何も出なければ差分はない
+- `--yes` は送ったあとに nginx のキャッシュを消し、本番のテーマ配下の権限、`assets/` の全ファイルの URL、トップページがすべて 200 であることを確かめる。キャッシュの消去の応答が 200 でないとき（手で消す `curl` の URL を表示する）と、確認で満たさないものがあるときは、どちらも列挙し、終了コード 1 で終わる。消去が失敗しても確認は行う
+
+本番ではこのテーマが有効である。`scripts/deploy-theme.sh` は有効・無効を変えない。有効なテーマを切り替えるのは `php ~/bin/wp --path=... theme activate <テーマ名>` で、サイト全体の表示が切り替わる。
