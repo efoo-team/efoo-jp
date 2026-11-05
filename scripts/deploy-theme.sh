@@ -36,6 +36,29 @@ verify_theme() {
 	return "$ng"
 }
 
+# 本番の nginx のキャッシュを消す。URL は $1 で差し替えられ、省略時は本番の消去 URL である。
+# 応答が 200 でなければ（curl 自体の失敗で 000 になる場合を含む）、手で消す方法を出して 1 を返す。
+clear_cache() {
+	local url="${1:-http://127.0.0.1:9080/clearcache?cwd=$DOCROOT}" code
+	code="$(remote "curl -s -o /dev/null -w '%{http_code}' -m 20 '$url'")" || code=000
+	[ -n "$code" ] || code=000
+	echo "nginx のキャッシュの消去 -> $code"
+	if [ "$code" != 200 ]; then
+		echo "キャッシュを消せなかった。古い HTML が残るため、サーバーに ssh で入り、次を実行して手で消す:"
+		echo "  curl '$url'"
+		return 1
+	fi
+}
+
+# 送ったあとの処理。キャッシュの消去が失敗しても本番の確認まで行い、どちらかが失敗していれば 1 を返す。
+finish_deploy() {
+	local ng=0
+	# 画像は ?ver= が付かず、HTML のキャッシュには古い ?ver= が残るため、送ったあとに nginx のキャッシュを消す。
+	clear_cache || ng=1
+	verify_theme "$1" || ng=1
+	return "$ng"
+}
+
 main() {
 	local dry tmp f php_files=()
 	case "${1:-}" in
@@ -56,15 +79,17 @@ main() {
 	done < <(find "$tmp/$THEME" -name '*.php' -type f -print0)
 	php_lint "${php_files[@]}"
 
-	remote "mkdir -p $DOCROOT/$THEME"
+	if [ ${#dry[@]} -eq 0 ]; then
+		remote "mkdir -p $DOCROOT/$THEME"
+	elif ! remote "test -d $DOCROOT/$THEME"; then
+		echo "送り先 $DOCROOT/$THEME は本番にまだ無い（--yes で作る）。以下はすべて新規として表示される"
+	fi
 	# git archive の mtime は本番と一致しないため、内容の差は checksum で判定し、mtime は送らない。
 	# -p で、揃えた権限を本番の既存ファイルにも写す。-i で権限だけの差も表示する。
 	echo "rsync の差分（itemize。何も出なければ差分なし）:"
 	rsync -rlpci --delete "${dry[@]}" -e "ssh ${SSH_OPTS[*]}" "$tmp/$THEME/" "$SSH_HOST:$DOCROOT/$THEME/"
 	if [ ${#dry[@]} -eq 0 ]; then
-		# 画像は ?ver= が付かず、HTML のキャッシュには古い ?ver= が残るため、送ったあとに nginx のキャッシュを消す。
-		echo "nginx のキャッシュの消去 -> $(remote "curl -s -o /dev/null -w '%{http_code}' -m 20 'http://127.0.0.1:9080/clearcache?cwd=$DOCROOT'")"
-		verify_theme "$tmp"
+		finish_deploy "$tmp"
 	fi
 }
 

@@ -22,7 +22,11 @@ tmp="$(mktemp -d)"
 trap "rm -rf '$tmp'" EXIT
 cp -Rp wp-content/mu-plugins "$tmp/"
 normalize_perms "$tmp/mu-plugins"
-remote "mkdir -p $DOCROOT/wp-content/mu-plugins"
+if [ ${#dry[@]} -eq 0 ]; then
+	remote "mkdir -p $DOCROOT/wp-content/mu-plugins"
+elif ! remote "test -d $DOCROOT/wp-content/mu-plugins"; then
+	echo "送り先 $DOCROOT/wp-content/mu-plugins は本番にまだ無い（--yes で作る）。以下はすべて新規として表示される"
+fi
 # -i で、権限や mtime だけの差も種類が分かるように表示する。
 rsync -rlptvi --delete "${dry[@]}" -e "ssh ${SSH_OPTS[*]}" "$tmp/mu-plugins/" "$SSH_HOST:$DOCROOT/wp-content/mu-plugins/"
 if [ ${#dry[@]} -eq 0 ]; then
