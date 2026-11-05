@@ -86,7 +86,7 @@ main() {
 	fi
 	# git archive の mtime は本番と一致しないため、内容の差は checksum で判定し、mtime は送らない。
 	# -p で、揃えた権限を本番の既存ファイルにも写す。-i で権限だけの差も表示する。
-	echo "rsync の差分（itemize。何も出なければ差分なし）:"
+	echo "rsync の差分（itemize。行頭 <f のうち c・s を含む行が内容の差、p を含む行が権限の差。T だけの行は時刻の違いで書き換えではない）:"
 	rsync -rlpci --delete "${dry[@]}" -e "ssh ${SSH_OPTS[*]}" "$tmp/$THEME/" "$SSH_HOST:$DOCROOT/$THEME/"
 	if [ ${#dry[@]} -eq 0 ]; then
 		finish_deploy "$tmp"
