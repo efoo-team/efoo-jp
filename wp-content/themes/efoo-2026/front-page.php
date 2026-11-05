@@ -121,6 +121,7 @@ get_header();
 			<h3 style="margin: 0; font-size: 26px; font-weight: 700; color: #14201A">Lシフト<span class="en" style="display: block; margin-top: 6px; font-size: 13px; font-weight: 500; color: var(--accent); letter-spacing: 0.2em">L-SHIFT</span></h3>
 			<p style="margin: 0; font-size: 15px; line-height: 1.9; color: #44504A">LINEを活用した新しいシフト管理プラットフォーム。スタッフは使い慣れたLINEで、管理者は直感的なWeb画面で。煩雑な業務を自動化します。</p>
 			<div style="display: flex; flex-wrap: wrap; gap: 8px">
+				<span style="font-size: 11px; font-weight: 500; color: #44504A; background: #F1F4F0; border-radius: 999px; padding: 5px 12px">AIエージェント</span>
 				<span style="font-size: 11px; font-weight: 500; color: #44504A; background: #F1F4F0; border-radius: 999px; padding: 5px 12px">シフト管理</span>
 				<span style="font-size: 11px; font-weight: 500; color: #44504A; background: #F1F4F0; border-radius: 999px; padding: 5px 12px">LINE連携</span>
 				<span style="font-size: 11px; font-weight: 500; color: #44504A; background: #F1F4F0; border-radius: 999px; padding: 5px 12px">勤怠・打刻</span>
