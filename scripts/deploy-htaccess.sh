@@ -16,6 +16,12 @@ YEAR_IMMUTABLE='max-age=31536000, immutable'
 YEAR='max-age=31536000'
 MONTH='max-age=2592000'
 
+# 作業用の一時ディレクトリ。
+TMP=
+# 書き換える前に写した .htaccess のサーバー上の場所と手元の場所。ROLLBACK_FROM が空でない間に終わると、on_exit がそこから戻す。
+ROLLBACK_FROM=
+LOCAL_SAVED=
+
 # サーバーの wp-cli で scripts/htaccess-block.php を実行する。$1 は render か write。
 run_helper() {
 	local encoded
@@ -78,18 +84,40 @@ verify() {
 	return "$ng"
 }
 
-# 書き換えの前に写しておいた .htaccess（サーバー上の $1）に戻す。
-restore() {
+# 書き換える前に写しておいた .htaccess（サーバー上の ROLLBACK_FROM）に戻し、戻った内容が写しと一致するかを確かめる。
+# 戻せなかった、または戻ったことを確かめられなかったときは、手で戻すコマンドを出して 1 を返す。
+rollback() {
 	local url
 	url="$SITE_URL/?efoo-htaccess-check=restored-$(date +%s)"
-	echo "$HTACCESS を $1 に戻す"
-	remote "cp '$1' '$HTACCESS'"
-	clear_cache || true
-	echo "戻した後の $url -> $(http_code "$url")"
+	echo "$HTACCESS を、書き換える前の写し $ROLLBACK_FROM に戻す"
+	if remote "cp '$ROLLBACK_FROM' '$HTACCESS'" && remote "cat '$HTACCESS'" >"$TMP/restored" && cmp -s "$LOCAL_SAVED" "$TMP/restored"; then
+		echo "戻した"
+		clear_cache || true
+		echo "戻した後の $url -> $(http_code "$url")"
+		return 0
+	fi
+	echo "戻せなかった、または戻ったことを確かめられなかった。次のコマンドで手で戻し、$SITE_URL/ が 200 を返すことを確かめる:"
+	echo "  ssh ${SSH_OPTS[*]} $SSH_HOST \"cp '$ROLLBACK_FROM' '$HTACCESS'\""
+	echo "サーバーの写しが使えないときは、手元の写し $LOCAL_SAVED の内容を $HTACCESS に書く"
+	return 1
+}
+
+# 終わるときの処理。書き換えを始めてから、確かめ終える前に終わった（途中のコマンドの失敗や中断を含む）ときは、写しに戻して終了コード 1 にする。
+on_exit() {
+	local status=$?
+	set +e
+	trap - EXIT INT TERM HUP
+	if [ -n "$ROLLBACK_FROM" ]; then
+		echo "書き換えを始めてから、確かめ終える前に終わった（終了コード ${status}）"
+		rollback
+		status=1
+	fi
+	[ -z "$TMP" ] || rm -rf "$TMP"
+	exit "$status"
 }
 
 main() {
-	local mode tmp stamp saved local_saved code ng=0
+	local mode stamp saved code ng=0
 	case "${1:-}" in
 	--dry-run) mode=dry ;;
 	--yes) mode=yes ;;
@@ -99,41 +127,40 @@ main() {
 		;;
 	esac
 
-	tmp="$(mktemp -d)"
-	# shellcheck disable=SC2064 # tmp は確定済みの値を埋め込む
-	trap "rm -rf '$tmp'" EXIT
+	TMP="$(mktemp -d)"
+	trap on_exit EXIT
+	trap 'exit 1' INT TERM HUP
 	php_lint "$HELPER"
-	remote "cat '$HTACCESS'" >"$tmp/current"
-	run_helper render >"$tmp/new"
+	remote "cat '$HTACCESS'" >"$TMP/current"
+	run_helper render >"$TMP/new"
 	echo "$HTACCESS の差分（- が今、+ が書き換えた後。何も出なければ差分なし）:"
-	if diff -u --label "${HTACCESS}（今）" --label "${HTACCESS}（書き換えた後）" "$tmp/current" "$tmp/new"; then
+	if diff -u --label "${HTACCESS}（今）" --label "${HTACCESS}（書き換えた後）" "$TMP/current" "$TMP/new"; then
 		echo "差分なし"
 	fi
 	[ "$mode" = yes ] || return 0
 
-	if ! cmp -s "$tmp/current" "$tmp/new"; then
+	if ! cmp -s "$TMP/current" "$TMP/new"; then
 		stamp="$(date +%Y%m%d-%H%M%S)"
 		saved="\$HOME/htaccess-before-deploy/efoo.jp-$stamp"
 		saved="$(remote "mkdir -p \$HOME/htaccess-before-deploy && cp -p '$HTACCESS' $saved && echo $saved")"
-		local_saved="$REPO_ROOT/.local/htaccess-before-deploy/efoo.jp-$stamp"
-		mkdir -p "$(dirname "$local_saved")"
-		cp "$tmp/current" "$local_saved"
-		echo "書き換える前の .htaccess の写し: サーバーの ${saved}、手元の $local_saved"
+		LOCAL_SAVED="$REPO_ROOT/.local/htaccess-before-deploy/efoo.jp-$stamp"
+		mkdir -p "$(dirname "$LOCAL_SAVED")"
+		cp "$TMP/current" "$LOCAL_SAVED"
+		echo "書き換える前の .htaccess の写し: サーバーの ${saved}、手元の $LOCAL_SAVED"
 
+		# ここから、下で ROLLBACK_FROM を空に戻すまでの間に終わると、on_exit が写しに戻す。
+		ROLLBACK_FROM="$saved"
 		run_helper write
-		remote "cat '$HTACCESS'" >"$tmp/written"
-		if ! cmp -s "$tmp/new" "$tmp/written"; then
+		remote "cat '$HTACCESS'" >"$TMP/written"
+		if ! cmp -s "$TMP/new" "$TMP/written"; then
 			echo "書き換えた後の $HTACCESS が、差分で示した内容と一致しない"
-			restore "$saved"
 			exit 1
 		fi
 		# nginx のキャッシュに無い URL で、Apache が .htaccess を読めているか（500 にならないか）を確かめる。
 		code="$(http_code "$SITE_URL/?efoo-htaccess-check=$stamp")"
 		echo "$SITE_URL/?efoo-htaccess-check=$stamp -> $code"
-		if [ "$code" != 200 ]; then
-			restore "$saved"
-			exit 1
-		fi
+		[ "$code" = 200 ] || exit 1
+		ROLLBACK_FROM=
 	fi
 
 	# nginx は応答の max-age の間ファイルを保持するため、書き換える前の応答を消してから確かめる。
