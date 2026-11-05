@@ -16,8 +16,18 @@ efoo株式会社のコーポレートサイトの自作テーマ。デザイン�
 - `assets/css/main.css` — カラー・余白・ヘッダーの高さのトークン、レイアウトのクラス、動きの定義、狭い画面のブレークポイント
 - `assets/js/main.js` — メニューの開閉、タイピング、粒子生成、ターミナルのループ、動画の検出枠（カット時刻・座標は実映像から採寸）、スライダー
 - `assets/img/` — Lシフトの画面素材（l-shift リポジトリ由来）、エディタ画像、動画のフレーム
+- `assets/fonts/` — Space Grotesk の latin サブセット（`space-grotesk-v22-latin.woff2`）とそのライセンス（`OFL.txt`）
 
 写真・PR動画は WordPress のメディア（`wp-content/uploads`）を参照する。ローカルでは `pnpm env:pull` 済みであれば同じパスで表示される。
+
+## フォント
+
+書体は Noto Sans JP（本文）、Space Grotesk（英字の見出し・ラベル。`.en`）、JetBrains Mono（`.mono`）の 3 つである。
+
+- Noto Sans JP（400・500・700・900）と JetBrains Mono（400・500）は Google Fonts から読む（`functions.php` の `efoo-fonts`）。`fonts.googleapis.com` と `fonts.gstatic.com` へは preconnect を出す
+- Space Grotesk はテーマから配信する。ファイルは Google Fonts が配信する latin サブセット（Google Fonts の版 v22、フォントの版 2.000）そのもので、`main.css` の `@font-face` は Google Fonts と同じ `unicode-range` を持つ。範囲外の文字（`●` など）は Noto Sans JP で描かれる。可変フォントなので 1 つのファイルで 500〜700 を描き、400 の指定は 500 で描かれる
+- Space Grotesk のファイルは `wp_head` で preload する。トップのヒーローの装飾英字は右端揃えのため、フォントが後から差し替わると横にずれる。preload で最初の描画までに間に合わせる
+- Space Grotesk の URL には `?ver=` を付けない。preload の URL と `main.css` の `url()` が同じ URL でないと 2 回取得するためである。ファイルを差し替えるときはファイル名の版を変え、`main.css` の `url()` と `functions.php` の preload の URL を合わせて直す
 
 ## データとリンクの決まり
 
