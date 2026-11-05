@@ -122,10 +122,10 @@ bash scripts/deploy-htaccess.sh --dry-run --remove   # 区間の中身を空に�
 bash scripts/deploy-htaccess.sh --yes --remove       # 区間の中身を空にして保存期間を外し、応答ヘッダーに保存期間が無いことを確かめる
 ```
 
-- 書き換えは、サーバーの wp-cli から WordPress の `insert_with_markers()` で行う。区間がまだ無ければ `.htaccess` の末尾（`# END WordPress` の後）に足し、区間の外は変えない。WordPress がパーマリンクの保存で書き換えるのは `# BEGIN WordPress` の区間だけなので、この区間は残る
+- 書き換えは、サーバーの wp-cli から WordPress の `insert_with_markers()` で行う。区間がまだ無ければ `.htaccess` の末尾（`# END WordPress` の後）に足し、区間の外は変えない。WordPress がパーマリンクの保存で書き換えるのは `# BEGIN WordPress` の区間だけなので、この区間は残る。`insert_with_markers()` は末尾に改行を付けずに書くため、区間を初めて足すときの `--dry-run` の差分には、`# END WordPress` の行が `-`（`\ No newline at end of file` 付き）と `+` の両方に出る。行の中身は同じで、後ろに行が続くようになっただけであり、書き換えに害はない
 - `--yes` は、書き換える前の `.htaccess` を、サーバーの `~/htaccess-before-deploy/efoo.jp-<日時>` と手元の `.local/htaccess-before-deploy/efoo.jp-<日時>` に写す。書き換えを始めてから、書き換えた内容が差分のとおりであることと、トップページが 200 を返すことを確かめ終えるまでの間に終わると（書き換えや読み戻しの失敗、内容の不一致、`.htaccess` の誤りによる 500 など、中断を含む）、サーバーの写しに戻して終了コード 1 で終わる。写しに戻せなかったときは、そのことと、手で戻すコマンドを表示する
 - 保存期間を外すときは `--remove` を付ける。区間の中身を空にし（`# BEGIN efoo cache` と `# END efoo cache` の行だけが残る）、区間の外は変えない。`--remove` を付けない反映では、`server/htaccess/efoo-cache.conf` が空、または空行とコメント行だけのとき、本番に接続する前に誤りとして止める。設定ファイルを空にしても保存期間は外れない。外したあと設定を戻すときは、`--remove` を付けずに `--yes` で反映する。書き換える前の写しに `.htaccess` 全体を戻す方法もあるが、写した後に WordPress が `# BEGIN WordPress` の区間を書き換えていれば、その変更も戻ってしまう
-- `--yes` は、書き換えた後に nginx のキャッシュを消し、トップページ（`Cache-Control` なし）、トップページが読み込む `?ver=` 付きの CSS と JS（1 年と `immutable`）、同じ CSS の `?ver=` 無しの URL（なし）、テーマの画像とアップロードした画像（30 日）、WordPress 本体のフォント `wp-includes/fonts/dashicons.woff2`（1 年）の `Cache-Control` を確かめる。満たさないものがあれば列挙し、終了コード 1 で終わる。区間に差分が無いときは書き換えず、nginx のキャッシュの消去と確認だけを行う。`--remove` のときは、同じ URL のどれにも `Cache-Control` が無いことを確かめる
+- `--yes` は、書き換えた後に nginx のキャッシュを消し、トップページ（`Cache-Control` なし）、トップページの HTML から拾った URL の `Cache-Control` を確かめる。対象は、テーマ efoo-2026 の `assets/css/main.css` と `assets/js/main.js` の `?ver=` 付きの URL（1 年と `immutable`）、同じ `main.css` の `?ver=` 無しの URL（なし）、PR 動画の mp4（30 日）、テーマのフォント（`wp_head` の preload に出る `assets/fonts/` の woff2。1 年）、テーマの画像とアップロードした画像（30 日）である。どれかの URL がトップページの HTML に無いときも、確かめられなかったものとして列挙する。満たさないものがあれば列挙し、終了コード 1 で終わる。区間に差分が無いときは書き換えず、nginx のキャッシュの消去と確認だけを行う。`--remove` のときは、同じ URL のどれにも `Cache-Control` が無いことを確かめる
 
 ## テーマ
 
