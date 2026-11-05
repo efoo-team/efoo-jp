@@ -290,7 +290,8 @@ a.entry-term:hover { background: var(--accent); color: var(--ground); }
 /* ページ送り */
 .pagination { margin-top: 28px; }
 .pagination .nav-links { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.pagination .page-numbers { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 10px; border: 1px solid var(--line2); border-radius: 50%; color: var(--ink); font-weight: 500; transition: color .25s ease, border-color .25s ease, transform .25s ease; }
+/* 全体リセットが無いため、枠線と余白を幅・高さに含めて 44×44 の円にする */
+.pagination .page-numbers { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--line2); border-radius: 999px; color: var(--ink); font-weight: 500; transition: color .25s ease, border-color .25s ease, transform .25s ease; }
 .pagination .page-numbers:hover { color: var(--accent); border-color: var(--accent); transform: translateY(-2px); }
 .pagination .page-numbers.current { background: var(--ink); border-color: var(--ink); color: #FAFAF7; }
 .pagination .page-numbers.dots { border: 0; }
