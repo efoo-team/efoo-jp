@@ -21,9 +21,9 @@ $efoo_prefix = is_front_page() ? '' : $efoo_home;
 	<a href="<?php echo esc_url( $efoo_home ); ?>" class="en" style="font-size: 26px; font-weight: 700; color: #14201A; letter-spacing: -0.02em">efoo<span class="logo-dot" style="color: var(--accent)">.</span></a>
 	<button type="button" class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="メニューを開く"><span class="nav-toggle-bars" aria-hidden="true"></span></button>
 	<nav id="site-nav" class="site-nav" aria-label="メインメニュー">
-		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#services' ); ?>">Services</a>
-		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#strength' ); ?>">Strength</a>
-		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#team' ); ?>">Team</a>
+		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#services' ); ?>">サービス</a>
+		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#strength' ); ?>">強み</a>
+		<a class="nav-link" href="<?php echo esc_url( $efoo_prefix . '#team' ); ?>">チーム</a>
 		<a class="nav-link" href="<?php echo esc_url( efoo_news_index_url() ); ?>">お知らせ</a>
 		<?php if ( efoo_company_url() ) { ?>
 		<a class="nav-link" href="<?php echo esc_url( efoo_company_url() ); ?>">会社概要</a>
