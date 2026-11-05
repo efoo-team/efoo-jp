@@ -37,7 +37,7 @@ get_header();
 				<p class="mono term-body"><span id="term-lines"></span><span class="term-line"><span style="color: #B4BE82">➜ </span><span style="color: #89B8C2">~/efoo </span><span style="color: #A093C7">❯ </span><span style="color: #C6C8D1" id="term-typed"></span><span class="cursor term-cursor" aria-hidden="true"></span></span></p>
 			</div>
 			<figure style="margin: 0; position: relative">
-				<video id="pr-video" src="<?php echo esc_url( $uploads . '/2024/05/PR%E5%8B%95%E7%94%BB.mp4' ); ?>" poster="<?php echo esc_url( $uploads . '/2024/05/P8A9118-1024x683.jpg' ); ?>" autoplay muted loop playsinline aria-label="調理レッスンのPR動画" style="display: block; width: 100%; aspect-ratio: 2132 / 1200; object-fit: cover; background: #0D1310; border-radius: 20px; box-shadow: 0 24px 56px rgba(20, 32, 26, 0.16)"></video>
+				<video id="pr-video" data-src="<?php echo esc_url( $uploads . '/2024/05/PR%E5%8B%95%E7%94%BB.mp4' ); ?>" poster="<?php echo esc_url( $uploads . '/2024/05/P8A9118-1024x683.jpg' ); ?>" preload="none" muted loop playsinline aria-label="調理レッスンのPR動画" style="display: block; width: 100%; aspect-ratio: 2132 / 1200; object-fit: cover; background: #0D1310; border-radius: 20px; box-shadow: 0 24px 56px rgba(20, 32, 26, 0.16)"></video>
 				<span class="cv-corner" aria-hidden="true" style="top: 10px; left: 10px; border-top-width: 1.5px; border-left-width: 1.5px"></span>
 				<span class="cv-corner" aria-hidden="true" style="top: 10px; right: 10px; border-top-width: 1.5px; border-right-width: 1.5px"></span>
 				<span class="cv-corner" aria-hidden="true" style="bottom: 10px; left: 10px; border-bottom-width: 1.5px; border-left-width: 1.5px"></span>
