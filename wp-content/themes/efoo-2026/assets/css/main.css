@@ -35,7 +35,7 @@ a:hover { color: var(--ink); }
 .btn-ghost { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--line2); color: var(--ink); font-weight: 500; font-size: 15px; padding: 16px 32px; border-radius: 8px; transition: border-color .25s ease, transform .25s ease; }
 .btn-ghost:hover { border-color: var(--accent); transform: translateY(-2px); }
 
-.card { transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease; }
+.card { --card-transition: transform .35s ease, border-color .35s ease, box-shadow .35s ease; transition: var(--card-transition); }
 .card:hover { transform: translateY(-8px); border-color: var(--accent) !important; box-shadow: 0 20px 48px rgba(20, 32, 26, 0.12); }
 .card:hover .card-arrow { background: var(--accent); color: var(--ground); }
 .card-arrow { transition: background .35s ease, color .35s ease, transform .35s ease; }
@@ -113,14 +113,15 @@ a:hover { color: var(--ink); }
 	.word-assemble { opacity: 0; filter: blur(10px); transform: scale(1.05); animation: assemble 1s cubic-bezier(.25, .8, .25, 1) 1.5s forwards; }
 	.pt { opacity: 0; animation: ptForm var(--dur, 1.9s) linear var(--delay, .2s) both; }
 	@supports (animation-timeline: view()) {
-		html:not(.no-sdt) .sr { opacity: 0; transform: translateY(44px); animation: srIn 1ms linear forwards; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+		html:not(.no-sdt) .sr { opacity: 0; translate: 0 44px; animation: srIn 1ms linear forwards; animation-timeline: view(); animation-range: entry 0% entry 40%; }
 		html:not(.no-sdt) .sr2 { animation-range: entry 0% entry 55%; }
 		html:not(.no-sdt) .sr3 { animation-range: entry 0% entry 70%; }
 	}
-	.no-sdt .sr { opacity: 0; transform: translateY(44px); transition: opacity .7s ease, transform .7s cubic-bezier(.22, .9, .3, 1); }
-	.no-sdt .sr2 { transition-delay: .12s; }
-	.no-sdt .sr3 { transition-delay: .24s; }
-	.no-sdt .sr.sr-in { opacity: 1; transform: none; }
+	.no-sdt .sr { --sr-transition: opacity .7s ease var(--sr-delay, 0s), translate .7s cubic-bezier(.22, .9, .3, 1) var(--sr-delay, 0s); opacity: 0; translate: 0 44px; transition: var(--sr-transition); }
+	.no-sdt .sr2 { --sr-delay: .12s; }
+	.no-sdt .sr3 { --sr-delay: .24s; }
+	.no-sdt .sr.card { transition: var(--sr-transition), var(--card-transition); }
+	.no-sdt .sr.sr-in { opacity: 1; translate: none; }
 }
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
@@ -131,7 +132,7 @@ a:hover { color: var(--ink); }
 @keyframes charUp { to { opacity: 1; transform: translateY(0) rotate(0); } }
 @keyframes assemble { to { opacity: 1; filter: blur(0); transform: scale(1); } }
 @keyframes ptForm { 0% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.5); animation-timing-function: cubic-bezier(.45, 0, .6, .5); } 12% { opacity: var(--o, .9); } 36% { transform: translate(var(--mx), var(--my)) scale(1.15); animation-timing-function: cubic-bezier(.25, .4, .25, 1); } 62% { opacity: var(--o, .9); transform: translate(0, 0) scale(1); } 84% { opacity: var(--o, .9); transform: translate(0, 0) scale(1); } 100% { opacity: 0; transform: translate(0, 0) scale(.9); } }
-@keyframes srIn { to { opacity: 1; transform: translateY(0); } }
+@keyframes srIn { to { opacity: 1; translate: 0 0; } }
 @keyframes scrollHint { 0% { top: -100%; } 60%, 100% { top: 100%; } }
 
 @media (prefers-reduced-motion: reduce) {
