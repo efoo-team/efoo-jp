@@ -38,18 +38,17 @@ efoo株式会社のコーポレートサイトの自作テーマ。デザイン�
 
 ## ローカルでの確認
 
-`.wp-env.json` がこのテーマを wp-env にマウントしている。初回・設定変更後は wp-env の再起動が要る。
+`.wp-env.json` がこのテーマを wp-env にマウントしている。初回・設定変更後は wp-env の再起動が要る。`pnpm env:pull` で取り込んだ本番の DB では、このテーマが有効なので、そのまま表示を確かめられる。
 
 ```sh
 pnpm env:start
-pnpm wp theme activate efoo-2026
 ```
 
-戻すときは `pnpm wp theme activate inspiro`。
+Inspiro の表示と見比べるときは `pnpm wp theme activate inspiro`、このテーマへ戻すときは `pnpm wp theme activate efoo-2026`。ローカルの DB は `pnpm env:pull` で本番の状態に戻る。
 
 ## 本番への反映
 
-このテーマの配置と有効化は本番への書き込みのため、ユーザーの明示指示があるときだけ行う。
+このテーマの配置は本番への書き込みのため、ユーザーの明示指示があるときだけ行う。
 
 配置は `scripts/deploy-theme.sh` で行う。変更を main へマージしてから、次の順に実行する。
 
@@ -64,4 +63,4 @@ bash scripts/deploy-theme.sh --yes       # 本番へ送り、nginx のキャッ�
 - 差分は内容の checksum と権限で判定する。`--dry-run` の出力で `>f` は内容の差、`p` は権限の差である。何も出なければ差分はない
 - `--yes` は送ったあとに nginx のキャッシュを消し、本番のテーマ配下の権限、`assets/` の全ファイルの URL、トップページがすべて 200 であることを確かめる。満たさないものがあれば列挙し、終了コード 1 で終わる
 
-有効化は `php ~/bin/wp --path=... theme activate efoo-2026`。有効化すると、サイト全体の表示が Inspiro からこのテーマに切り替わる。
+本番ではこのテーマが有効である。`scripts/deploy-theme.sh` は有効・無効を変えない。有効なテーマを切り替えるのは `php ~/bin/wp --path=... theme activate <テーマ名>` で、サイト全体の表示が切り替わる。

@@ -101,9 +101,13 @@ bash scripts/install-wp-cli.sh   # サーバーの ~/bin/wp に wp-cli を導入
 
 ## テーマ
 
-本番で有効なテーマは Inspiro（WPZOOM、wordpress.org 配布版）である。トップページを刷新する自作テーマ `wp-content/themes/efoo-2026/` をリポジトリで管理しており、ローカルでは `.wp-env.json` のマッピングで wp-env に載る（確認・本番反映の手順はテーマの README を見る）。未有効化のため、以下の Inspiro の記述が現在の本番の状態である。
+本番で有効なテーマは、自作テーマ `wp-content/themes/efoo-2026/` である。リポジトリで管理しており、ローカルでは `.wp-env.json` のマッピングで wp-env に載る。ローカルの有効なテーマは、取り込んだ本番の DB と同じく efoo-2026 である。配置と確認の手順はテーマの README を見る。
 
-テーマは Inspiro（WPZOOM、wordpress.org 配布版）である。Inspiro は classic theme なので、block theme のように Site Editor の変更を DB に保存して親テーマの更新から守る仕組みは使えない。ただし、このサイトの見た目の調整はすべて DB にあり、テーマのファイルには手を入れていない。具体的には次の 3 つである。
+本番には Inspiro（WPZOOM、wordpress.org 配布版）が無効のまま残っている。以下の「Inspiro」節は、Inspiro へ戻すとき、または Inspiro を更新するときの参考である。
+
+### Inspiro（無効のまま残しているテーマ）
+
+Inspiro は classic theme なので、block theme のように Site Editor の変更を DB に保存して親テーマの更新から守る仕組みは使えない。ただし、Inspiro で有効だったときの見た目の調整はすべて DB にあり、テーマのファイルには手を入れていない。具体的には次の 3 つである。
 
 - Customizer の設定（option `theme_mods_inspiro`）
 - 追加 CSS（`custom_css` の投稿）
@@ -117,7 +121,7 @@ Inspiro 2.x への更新では、見出しのフォント（Montserrat から On
 
 ## wpzoom-portfolio のカテゴリ順
 
-トップページのポートフォリオブロックは、カテゴリの絞り込みをカテゴリの「説明」欄の値の順に並べる。この並び順は mu-plugin の `wp-content/mu-plugins/efoo-portfolio-category-order.php` が決める。この mu-plugin はプラグイン本体を変更しないので、wpzoom-portfolio を公式の新しい版へ更新しても並び順は保たれる。カテゴリの並びを変えるには、管理画面のポートフォリオのカテゴリで「説明」欄の値（`1`、`2`、`3`）を変える。
+ポートフォリオブロックは、カテゴリの絞り込みをカテゴリの「説明」欄の値の順に並べる。ブロックを含むのは、固定ページ `homepage`（ID 95）と投稿タイプ `portfolio_layout` の `contents`（ID 310）である。有効な efoo-2026 のトップページ（`front-page.php`）はこのブロックを使わず、お知らせの絞り込みチップ（`category-chips.php`）も件数順で並べるため、現在の本番のトップページとお知らせ一覧には、この並び順は表れない。Inspiro へ戻したときのトップページに表れる。この並び順は mu-plugin の `wp-content/mu-plugins/efoo-portfolio-category-order.php` が決める。この mu-plugin はプラグイン本体を変更しないので、wpzoom-portfolio を公式の新しい版へ更新しても並び順は保たれる。カテゴリの並びを変えるには、管理画面のポートフォリオのカテゴリで「説明」欄の値（`1`、`2`、`3`）を変える。
 
 本番の wpzoom-portfolio 1.4.10 には、同じ並び替えをプラグイン本体に直接書き込んだ改修も残っている（差分は `patches/wpzoom-portfolio-1.4.10.diff`）。mu-plugin が同じ順を決めるため、wpzoom-portfolio は公式の版へ更新してよい。更新したら `scripts/known-modified.tsv` から wpzoom-portfolio の行を消し、`patches/` も消す。
 
