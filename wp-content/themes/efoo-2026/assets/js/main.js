@@ -72,20 +72,25 @@
 		}
 	}
 
-	// ヒーローのラベルのタイピング
+	// ヒーローのラベルのタイピング。最初から打ち直せる関数にしてあり、呼ぶたびに前の実行を打ち切る
 	var label = document.getElementById('hero-label');
 	var LABEL_TEXT = 'TECHNOLOGY × FOOD';
+	var typeLabelRun = 0;
+	var typeLabel = async function () {
+		var run = ++typeLabelRun;
+		label.textContent = '';
+		await wait(350);
+		for (var i = 1; i <= LABEL_TEXT.length; i++) {
+			if (run !== typeLabelRun) { return; }
+			label.textContent = LABEL_TEXT.slice(0, i);
+			await wait(55 + Math.random() * 45);
+		}
+	};
 	if (label) {
 		if (REDUCE) {
 			label.textContent = LABEL_TEXT;
 		} else {
-			(async function () {
-				await wait(350);
-				for (var i = 1; i <= LABEL_TEXT.length; i++) {
-					label.textContent = LABEL_TEXT.slice(0, i);
-					await wait(55 + Math.random() * 45);
-				}
-			})();
+			typeLabel();
 		}
 	}
 
