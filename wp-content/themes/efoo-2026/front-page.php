@@ -7,6 +7,7 @@ $uploads = content_url( 'uploads' );
 get_header();
 ?>
 
+<main>
 <!-- ヒーロー -->
 <section id="top" class="hero">
 	<div aria-hidden="true" style="position: absolute; inset: 0; background-image: linear-gradient(rgba(21, 128, 61, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(21, 128, 61, 0.07) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 30%, transparent 75%)"></div>
@@ -293,6 +294,8 @@ get_header();
 		<a class="btn-primary" href="<?php echo esc_url( efoo_contact_url() ); ?>" style="margin-top: 8px; font-size: 16px; padding: 20px 44px">お問い合わせはこちら<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg></a>
 	</div>
 </section>
+
+</main>
 
 <?php
 get_footer();
