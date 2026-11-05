@@ -119,7 +119,3 @@ Inspiro 2.x への更新では、見出しのフォント（Montserrat から On
 フォームの送信後に表示する「Submitted successfully!」「Submission failed!」は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-ja.php` が gettext フィルター（テキストドメイン `wpzoom-forms`）で日本語にする。プラグイン本体は変更しないので、wpzoom-forms を更新しても文言は保たれる。
 
 送信ボタンの「送信する」はプラグインのコードではなく、フォームの投稿（ID 239、post_type `wpzf-form`）の本文に保存された `wpzoom-forms/submit-field` ブロックの値である。変えるにはフォーム編集画面の送信ボタンの「Name」欄で変える。
-
-## 旧 URL の転送
-
-記事の slug を変えたときの旧 URL からの転送は、mu-plugin の `wp-content/mu-plugins/efoo-old-url-redirects.php` が持つ対応表で行う。投稿タイプ `portfolio_item` は階層型で登録されているため、WordPress は旧 slug を `_wp_old_slug` に保存せず、自動では転送しない。`portfolio_item` の slug を変えたら、旧 slug から新しい URL への行をこの対応表に足す。
