@@ -1,23 +1,14 @@
 #!/usr/bin/env bash
 # origin/main の wp-content/themes/efoo-2026/ を本番の同じパスへ同期する。origin/main に無いファイルは本番から消す。
-# 作業ツリーではなく origin/main を送るのは、本番のテーマを main と一致させるためである。
+# どのチェックアウト・ブランチで実行しても、作業ツリーではなく fetch した origin/main を送る（scripts/lib.sh の extract_deploy_ref）。
 #   bash scripts/deploy-theme.sh --dry-run   転送内容の確認だけ
 #   bash scripts/deploy-theme.sh --yes       同期し、nginx のキャッシュを消して、本番を確かめる
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 THEME=wp-content/themes/efoo-2026
-REF=origin/main
 
-# origin/main のテーマを、ディレクトリ 755・ファイル 644 にして $1 へ展開する。
-extract_theme() {
-	git -C "$REPO_ROOT" fetch -q origin main
-	echo "送るコミット: $(git -C "$REPO_ROOT" log -1 --format='%h %s' "$REF")"
-	git -C "$REPO_ROOT" archive "$REF" "$THEME" | tar -x -C "$1"
-	normalize_perms "$1/$THEME"
-}
-
-# 本番のテーマを確かめる。本番へは書き込まない。$1 は extract_theme の展開先で、assets/ の URL の一覧に使う。
+# 本番のテーマを確かめる。本番へは書き込まない。$1 は extract_deploy_ref の展開先で、assets/ の URL の一覧に使う。
 # 満たさないものを列挙し、1 つでもあれば 1 を返す。
 verify_theme() {
 	local ng=0 path code
@@ -46,35 +37,14 @@ finish_deploy() {
 }
 
 main() {
-	local dry tmp f php_files=()
-	case "${1:-}" in
-	--dry-run) dry=(--dry-run) ;;
-	--yes) dry=() ;;
-	*)
-		echo "--dry-run か --yes を指定する" >&2
-		exit 1
-		;;
-	esac
-
+	local tmp
+	read_mode "${1:-}"
 	tmp="$(mktemp -d)"
 	# shellcheck disable=SC2064 # tmp は確定済みの値を埋め込む
 	trap "rm -rf '$tmp'" EXIT
-	extract_theme "$tmp"
-	while IFS= read -r -d '' f; do
-		php_files+=("$f")
-	done < <(find "$tmp/$THEME" -name '*.php' -type f -print0)
-	php_lint "${php_files[@]}"
-
-	if [ ${#dry[@]} -eq 0 ]; then
-		remote "mkdir -p $DOCROOT/$THEME"
-	elif ! remote "test -d $DOCROOT/$THEME"; then
-		echo "送り先 $DOCROOT/$THEME は本番にまだ無い（--yes で作る）。以下はすべて新規として表示される"
-	fi
-	# git archive の mtime は本番と一致しないため、内容の差は checksum で判定し、mtime は送らない。
-	# -p で、揃えた権限を本番の既存ファイルにも写す。-i で権限だけの差も表示する。
-	echo "rsync の差分（itemize。行頭 < は本番へ送る行、. は内容を送らず権限などの属性だけを変える行。c か s を含む f の行が内容の差、p を含む行が権限の差（< でも . でも、f でも d でも出る）。c・s・p を含まず T または t だけの行は時刻の違いで書き換えではない。*deleting は削除）:"
-	rsync -rlpci --delete "${dry[@]}" -e "ssh ${SSH_OPTS[*]}" "$tmp/$THEME/" "$SSH_HOST:$DOCROOT/$THEME/"
-	if [ ${#dry[@]} -eq 0 ]; then
+	extract_deploy_ref "$tmp" "$THEME"
+	sync_to_remote "$tmp" "$THEME"
+	if [ "$MODE" = yes ]; then
 		finish_deploy "$tmp"
 	fi
 }
