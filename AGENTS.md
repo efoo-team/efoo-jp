@@ -2,7 +2,7 @@
 
 efoo株式会社のコーポレートサイト https://efoo.jp/ を運用・改善するリポジトリ。サイトは本番サーバー上の WordPress で、ローカルでは wp-env で本番と同じ内容を再現して確かめる。
 
-リポジトリで管理するのは、自作のコード（`wp-content/mu-plugins/`）、ローカル環境の設定（`.wp-env.json`）、本番の取得・点検のスクリプトである。配布物のテーマ・プラグイン、ページの内容、アップロード画像は本番が正本であり、Git では管理しない。ローカルへは本番のバックアップから取り込む。
+リポジトリで管理するのは、自作のコード（`wp-content/mu-plugins/` と自作テーマ `wp-content/themes/efoo-2026/`）、ローカル環境の設定（`.wp-env.json`）、本番の取得・点検のスクリプトである。配布物のテーマ・プラグイン、ページの内容、アップロード画像は本番が正本であり、Git では管理しない。ローカルへは本番のバックアップから取り込む。
 
 ## ローカル環境
 
@@ -101,6 +101,8 @@ bash scripts/install-wp-cli.sh   # サーバーの ~/bin/wp に wp-cli を導入
 
 ## テーマ
 
+本番で有効なテーマは Inspiro（WPZOOM、wordpress.org 配布版）である。トップページを刷新する自作テーマ `wp-content/themes/efoo-2026/` をリポジトリで管理しており、ローカルでは `.wp-env.json` のマッピングで wp-env に載る（確認・本番反映の手順はテーマの README を見る）。未有効化のため、以下の Inspiro の記述が現在の本番の状態である。
+
 テーマは Inspiro（WPZOOM、wordpress.org 配布版）である。Inspiro は classic theme なので、block theme のように Site Editor の変更を DB に保存して親テーマの更新から守る仕組みは使えない。ただし、このサイトの見た目の調整はすべて DB にあり、テーマのファイルには手を入れていない。具体的には次の 3 つである。
 
 - Customizer の設定（option `theme_mods_inspiro`）
@@ -118,3 +120,9 @@ Inspiro 2.x への更新では、見出しのフォント（Montserrat から On
 トップページのポートフォリオブロックは、カテゴリの絞り込みをカテゴリの「説明」欄の値の順に並べる。この並び順は mu-plugin の `wp-content/mu-plugins/efoo-portfolio-category-order.php` が決める。この mu-plugin はプラグイン本体を変更しないので、wpzoom-portfolio を公式の新しい版へ更新しても並び順は保たれる。カテゴリの並びを変えるには、管理画面のポートフォリオのカテゴリで「説明」欄の値（`1`、`2`、`3`）を変える。
 
 本番の wpzoom-portfolio 1.4.10 には、同じ並び替えをプラグイン本体に直接書き込んだ改修も残っている（差分は `patches/wpzoom-portfolio-1.4.10.diff`）。mu-plugin が同じ順を決めるため、wpzoom-portfolio は公式の版へ更新してよい。更新したら `scripts/known-modified.tsv` から wpzoom-portfolio の行を消し、`patches/` も消す。
+
+## 問い合わせフォームの文言
+
+フォームの送信後に表示する「Submitted successfully!」「Submission failed!」は、mu-plugin の `wp-content/mu-plugins/efoo-wpzoom-forms-ja.php` が gettext フィルター（テキストドメイン `wpzoom-forms`）で日本語にする。プラグイン本体は変更しないので、wpzoom-forms を更新しても文言は保たれる。
+
+送信ボタンの「送信する」はプラグインのコードではなく、フォームの投稿（ID 239、post_type `wpzf-form`）の本文に保存された `wpzoom-forms/submit-field` ブロックの値である。変えるにはフォーム編集画面の送信ボタンの「Name」欄で変える。
