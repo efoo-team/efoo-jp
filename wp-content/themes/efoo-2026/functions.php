@@ -190,3 +190,5 @@ add_action( 'wp_enqueue_scripts', function () {
 		)
 	);
 } );
+
+require_once get_theme_file_path( 'inc/ogp.php' );
